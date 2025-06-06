@@ -2,6 +2,8 @@ package com.dosgo.castx;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -102,12 +104,10 @@ class Control   {
                 }
                 if(type.equals("displayPower")){
                     int action= (int) jsonObject.getDouble("action");
-                    if (Settings.System.canWrite(context)) {
-                        if(action==0) {
-                            ScreenCastService.getInstance().setMinimumBrightness();
-                        }else {
-                            ScreenCastService.getInstance().restoreBrightness();
-                        }
+                    if(action==0) {
+                        ScreenCastService.getInstance().setMinimumBrightness();
+                    }else {
+                        ScreenCastService.getInstance().restoreBrightness();
                     }
                 }
 

@@ -114,26 +114,38 @@ public class ScreenCastService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.System.canWrite(this)) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
             }
         }
         System.out.println("setMinimumBrightness");
+        if (Settings.System.canWrite(this)) {
+            Settings.System.putInt(getContentResolver(),
+                    Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
 
-        Settings.System.putInt(getContentResolver(),
-                Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
 
-
-        // 亮度设为最小值（通常为0）
-        Settings.System.putInt(
-                getContentResolver(),
-                Settings.System.SCREEN_BRIGHTNESS,
-                1
-        );
+            // 亮度设为最小值（通常为0）
+            Settings.System.putInt(
+                    getContentResolver(),
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    1
+            );
+        }
     }
 
     public void restoreBrightness() {
-        Settings.System.putInt(getContentResolver(),
-                Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.System.canWrite(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
+        }
+        if (Settings.System.canWrite(this)) {
+            Settings.System.putInt(getContentResolver(),
+                    Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC);
+
+        }
     }
 
     public void startDecoding() {
@@ -147,10 +159,10 @@ public class ScreenCastService extends Service {
         // 启动录制
         videoEncoder.stop();
         audioEncoder.stop();
-        if (Settings.System.canWrite(this)) {
-            restoreBrightness();
-        }
+        restoreBrightness();
     }
+
+
 
     public void setMaxSize(int maxSize){
         if(videoEncoder!=null){
@@ -178,9 +190,7 @@ public class ScreenCastService extends Service {
     @Override
     public void onDestroy() {
         releaseRecording();
-        if (Settings.System.canWrite(this)) {
-            restoreBrightness();
-        }
+        restoreBrightness();
         Control.unSetContext();
         super.onDestroy();
     }
