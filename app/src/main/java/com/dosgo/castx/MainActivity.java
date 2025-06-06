@@ -1,8 +1,10 @@
 package com.dosgo.castx;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.projection.MediaProjectionManager;
@@ -42,6 +44,17 @@ public class MainActivity extends Activity {
     String addrTxt="";
     private EditText passwordInput;
 
+
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (ScreenCastService.ACTION_UPDATE.equals(intent.getAction())) {
+                // 更新UI
+                updateStartUI();
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,10 +81,10 @@ public class MainActivity extends Activity {
             if (Status.isRunning) {
                 stopService(new Intent(this, ScreenCastService.class));
                 btnControl.setText(R.string.startScreenMirroring);
-
                 Toast.makeText(this, R.string.stopScreenMirroringMsg, Toast.LENGTH_SHORT).show();
             } else {
                 startScreenCapture();
+
             }
         });
         btn_receive=findViewById(R.id.btn_receive);
@@ -101,13 +114,33 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() {
-        if (btnControl!=null){
-            btnControl.setText(Status.isRunning? R.string.stopScreenMirroring:R.string.startScreenMirroring);
+         IntentFilter filter = new IntentFilter(ScreenCastService.ACTION_UPDATE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // 本应用内部广播，可以安全导出（实际上不会被外部应用接收）
+            registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // Android 14+ 强制要求标志位
+            registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(receiver, filter);
         }
+        updateStartUI();
         super.onResume();
         getAllIpv4Addresses();
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // 在Activity暂停时注销广播接收器，避免内存泄漏
+        unregisterReceiver(receiver);
+    }
     // 更新显示数值
+
+    private void updateStartUI(){
+        if (btnControl!=null){
+            btnControl.setText(Status.isRunning? R.string.stopScreenMirroring:R.string.startScreenMirroring);
+        }
+    }
 
 
     private void startScreenCapture() {
@@ -238,4 +271,6 @@ public class MainActivity extends Activity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
+
+
 }

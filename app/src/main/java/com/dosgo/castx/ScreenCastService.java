@@ -39,7 +39,7 @@ public class ScreenCastService extends Service {
     private static ScreenCastService instance;
     private    String mimeType="";
     private    String webRtcMimeType="";
-
+    public static final String ACTION_UPDATE = "ScreenCastService.UPDATE_STATUS";
     public static ScreenCastService getInstance(){
         return instance;
     }
@@ -68,13 +68,13 @@ public class ScreenCastService extends Service {
             Intent resultData = intent.getParcelableExtra("EXTRA_RESULT_INTENT");
             if (resultCode == -1 && resultData != null) {
                 CastX.shutdown();
-
                 SharedPreferences prefs = getSharedPreferences("config", Context.MODE_PRIVATE);
                 String savedPassword = prefs.getString("password", "");
                 CastX.start(8081,metrics.widthPixels,metrics.heightPixels,webRtcMimeType,savedPassword);
                 System.out.println("start ok1111111111");
                 startRecording(resultCode, resultData);
                 Status.isRunning = true;
+                sendStatusUpdate();
             }
         }
         return START_STICKY;
@@ -178,7 +178,9 @@ public class ScreenCastService extends Service {
     @Override
     public void onDestroy() {
         releaseRecording();
-        restoreBrightness();
+        if (Settings.System.canWrite(this)) {
+            restoreBrightness();
+        }
         Control.unSetContext();
         super.onDestroy();
     }
@@ -231,5 +233,13 @@ public class ScreenCastService extends Service {
             }
         }
         return  false;
+    }
+
+
+    private void sendStatusUpdate() {
+        Intent intent = new Intent(ACTION_UPDATE);
+        // 设置Intent的包名，这样广播只会发送到我们自己的应用
+        intent.setPackage(getPackageName());
+        sendBroadcast(intent);
     }
 }
