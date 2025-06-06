@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">castX</string>
+
+    <string name="accessibility_service_label">castX</string>
+    <string name="accessibility_service_description">castX</string>
+    <string name="url"> Url:</string>
+    <string name="passwordlabel"> Password:</string>
+    <string name="passwordhint"> Please enter your password..</string>
+    <string name="startScreenMirroring">Start Screen Mirroring</string>
+    <string name="startScrcpyClient">Start the scrcpy client</string>
+    <string name="stopScrcpyClient">Stop the scrcpy client</string>
+    <string name="openBrowser">Open your browser</string>
+
+    <string name="stopScreenMirroring">Stop Screen Mirroring</string>
+    <string name="stopScreenMirroringMsg"> Screen casting has stopped</string>
+    <string name="scrcpyNotStarted">Scrcpy client not started</string>
+    <string name="chromeNoInstall">You don\'t have Edge or Chrome installed so you can\'t use it</string>
+</resources>

@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">castX</string>
+    <string name="accessibility_service_label">castX</string>
+    <string name="accessibility_service_description">castX</string>
+
+    <string name="url"> 投屏地址:</string>
+    <string name="passwordlabel"> 访问密码:</string>
+    <string name="passwordhint"> 请输入密码..</string>
+    <string name="startScreenMirroring">启动投屏</string>
+    <string name="stopScreenMirroring">停止投屏</string>
+    <string name="startScrcpyClient">启动scrcpy客户端</string>
+    <string name="stopScrcpyClient">停止scrcpy客户端</string>
+    <string name="openBrowser">打开浏览器</string>
+    <string name="stopScreenMirroringMsg"> 投屏已停止</string>
+    <string name="scrcpyNotStarted">Scrcpy客户端没有启动</string>
+    <string name="chromeNoInstall">你没有安装edge或者chrome浏览器不能使用</string>
+
+</resources>
