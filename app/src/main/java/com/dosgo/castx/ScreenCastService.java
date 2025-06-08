@@ -39,6 +39,7 @@ public class ScreenCastService extends Service {
     private static ScreenCastService instance;
     private    String mimeType="";
     private    String webRtcMimeType="";
+    private int senderPort=0;
     public static final String ACTION_UPDATE = "ScreenCastService.UPDATE_STATUS";
     public static ScreenCastService getInstance(){
         return instance;
@@ -70,7 +71,8 @@ public class ScreenCastService extends Service {
                 CastX.shutdown();
                 SharedPreferences prefs = getSharedPreferences("config", Context.MODE_PRIVATE);
                 String savedPassword = prefs.getString("password", "");
-                CastX.start(8081,metrics.widthPixels,metrics.heightPixels,webRtcMimeType,savedPassword);
+                senderPort = TcpPortFinder.getRandomAvailableTcpPort();
+                CastX.start(8081,metrics.widthPixels,metrics.heightPixels,webRtcMimeType,savedPassword,senderPort);
                 System.out.println("start ok1111111111");
                 startRecording(resultCode, resultData);
                 Status.isRunning = true;
@@ -97,10 +99,10 @@ public class ScreenCastService extends Service {
             System.out.println("widthPixels:"+metrics.widthPixels);
 
             // 初始化视频编码器
-            videoEncoder = new VideoEncoder(mediaProjection,metrics.widthPixels, metrics.heightPixels, FRAME_RATE,mimeType);
+            videoEncoder = new VideoEncoder(mediaProjection,metrics.widthPixels, metrics.heightPixels, FRAME_RATE,mimeType,senderPort);
 
             // 初始化音频编码器
-            audioEncoder = new AudioEncoder(ScreenCastService.this,mediaProjection,64000);
+            audioEncoder = new AudioEncoder(ScreenCastService.this,mediaProjection,64000,senderPort);
 
 
             Control.setContext(this);

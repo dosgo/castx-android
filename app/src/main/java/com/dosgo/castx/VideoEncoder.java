@@ -11,7 +11,6 @@ import android.media.projection.MediaProjection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
 import castX.CastX;
@@ -36,6 +35,9 @@ public class VideoEncoder {
     private  int dpi=180;
     private final VideoEncoder mythis;
     private int maxSize=1920;
+    private  int senderPort;
+
+    private ScrcpySender scrcpySender;
 
 
     public  void limit( ) {
@@ -67,7 +69,7 @@ public class VideoEncoder {
         System.out.println("  maxSize:"+  maxSize );
     }
 
-    public VideoEncoder(MediaProjection _mediaProjection, int width, int height, int frameRate,String mimeType) {
+    public VideoEncoder(MediaProjection _mediaProjection, int width, int height, int frameRate,String mimeType,int _senderPort) {
         this.srcWidth = width;
         this.srcHeight = height;
         this.limit();
@@ -78,6 +80,7 @@ public class VideoEncoder {
         mythis=this;
         _mediaProjection.registerCallback(mMediaProjectionCallback, new Handler());
         createVirtualDisplay(_mediaProjection);
+        senderPort=_senderPort;
     }
 
     public void setMaxSize(int _maxSize) {
@@ -225,6 +228,7 @@ public class VideoEncoder {
     private void encodeLoop()  {
         MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         System.out.println("encodeLoop start\r\n");
+        scrcpySender=new ScrcpySender(senderPort,width,height);
         try {
             while (isRunning) {
                 if(mediaCodec==null){
@@ -233,27 +237,13 @@ public class VideoEncoder {
                 int outIndex = mediaCodec.dequeueOutputBuffer(bufferInfo, 10000);
                 if (outIndex >= 0) {
                     ByteBuffer encodedData = mediaCodec.getOutputBuffer(outIndex);
-                    if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0) {
-                        MediaFormat newFormat = mediaCodec.getOutputFormat();
-                        ByteBuffer sps = newFormat.getByteBuffer("csd-0");
-                        ByteBuffer pps = newFormat.getByteBuffer("csd-1");
-                        if (sps != null) {
-                            writeH264Head(sps, bufferInfo);
-                            writeH264Head(pps, bufferInfo);
-                           // System.out.println("encodeLoop sps pps\r\n");
-                        }
-                    }
-                    writeH264Data(encodedData, bufferInfo);
+                    writeData(encodedData, bufferInfo);
                     mediaCodec.releaseOutputBuffer(outIndex, false);
                 } else {
                     if (outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                         // 获取SPS和PPS信息
                         MediaFormat newFormat = mediaCodec.getOutputFormat();
-                        ByteBuffer sps = newFormat.getByteBuffer("csd-0");
-                        ByteBuffer pps = newFormat.getByteBuffer("csd-1");
-                        writeH264Head(sps, bufferInfo);
-                        writeH264Head(pps, bufferInfo);
-                       // System.out.println("encodeLoop sps pps\r\n");
+                        writeHead(newFormat,bufferInfo);
                     }
                 }
             }
@@ -263,27 +253,30 @@ public class VideoEncoder {
         }
         System.out.println("encodeLoop end\r\n");
     }
-    private void writeH264Data(ByteBuffer buffer, MediaCodec.BufferInfo info) throws IOException {
+    private void writeData(ByteBuffer buffer, MediaCodec.BufferInfo info) throws IOException {
         if (info.size > 0) {
-            byte[] data = new byte[info.size];
-            buffer.position(info.offset);
-            buffer.get(data, 0, info.size);
-            CastX.sendVideo(data,info.presentationTimeUs);
+            boolean keyFrame=(info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0;
+            scrcpySender.writeFrame(buffer,info.presentationTimeUs,false,keyFrame);
         }
     }
-    private void writeH264Head(ByteBuffer buffer, MediaCodec.BufferInfo info) throws IOException {
-        int bufLen=buffer.limit();
-        if (bufLen > 0) {
-            byte[] data = new byte[bufLen];
-            buffer.position(0);
-            buffer.get(data, 0, bufLen);
-            // 5. 发送数据包
-            byte[] head = {0x00,0x00,0x00,0x01};
-            byte[] merged = new byte[4 + bufLen];
-            System.arraycopy(head, 0, merged, 0,4);
-            System.arraycopy(data, 0, merged, 4, bufLen);
-            CastX.sendVideo(merged,info.presentationTimeUs);
-        }
+    private void writeHead( MediaFormat newFormat,MediaCodec.BufferInfo info) throws IOException {
+
+        ByteBuffer sps = newFormat.getByteBuffer("csd-0");
+        ByteBuffer pps = newFormat.getByteBuffer("csd-1");
+
+        ByteBuffer buffer = ByteBuffer.allocate(sps.limit()+pps.limit());
+
+
+        buffer.put(sps);
+
+        buffer.put(pps);
+
+       System.out.println("h264 pps length:"+buffer.limit());
+        scrcpySender.writeFrame(buffer,info.presentationTimeUs,false,false);
+        System.out.println("h264 pps:"+java.util.stream.IntStream.range(0, buffer.limit())
+                .mapToObj(i -> String.format("%02X", buffer.get(i)))
+                .collect(java.util.stream.Collectors.joining(" ")));
+
     }
 
 

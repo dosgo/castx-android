@@ -33,13 +33,15 @@ public class AudioEncoder {
     private MediaCodec audioCodec;
     private HandlerThread encoderThread;
     private volatile boolean isEncoding;
-
+    private ScrcpySender scrcpySender;
+    private int senderPort;
     private  Context context;
 
-    public AudioEncoder(Context context,MediaProjection projection,int bitRate) {
+    public AudioEncoder(Context context,MediaProjection projection,int bitRate,int senderPort) {
         this.mediaProjection = projection;
         this.context=context;
         this.bitRate = bitRate;
+        this.senderPort=senderPort;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -100,6 +102,7 @@ public class AudioEncoder {
         encoderThread.start();
 
         new Handler(encoderThread.getLooper()).post(() -> {
+            scrcpySender=new ScrcpySender(senderPort);
             MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
             byte[] pcmBuffer = new byte[4096];
             audioRecord.startRecording();
@@ -136,13 +139,13 @@ public class AudioEncoder {
         int outIndex;
         while ((outIndex = audioCodec.dequeueOutputBuffer(bufferInfo, 0)) >= 0) {
             ByteBuffer outBuffer = audioCodec.getOutputBuffer(outIndex);
-            byte[] encoded = new byte[bufferInfo.size];
-            outBuffer.get(encoded);
-            boolean config = (bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0;
-            if(config){
-                System.out.println("encoded:"+ Arrays.toString(encoded));
-            }
-            CastX.sendAudio(encoded, bufferInfo.presentationTimeUs);
+
+            //boolean config = (bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0;
+           try{
+            scrcpySender.writeFrame(outBuffer,bufferInfo.presentationTimeUs,false,false);
+           } catch (Exception e) {
+
+           }
             audioCodec.releaseOutputBuffer(outIndex, false);
         }
     }
