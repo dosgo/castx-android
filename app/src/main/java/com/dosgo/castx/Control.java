@@ -97,7 +97,7 @@ class Control   {
 
 
                     Point  point=new Point(x,y);
-                    point= GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
+                    GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
 
 
 
@@ -123,7 +123,7 @@ class Control   {
 
 
                     Point  point=new Point(x,y);
-                   GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
+                    GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
 
 
                     service.performSwipe(startX,startY, (int) point.x, (int) point.y,duration);
@@ -145,16 +145,11 @@ class Control   {
 
     }
 
-    public static Point GetRealPoint(int width,int heigt,double videoWidth,double videoHeight,Point point){
+    public static void GetRealPoint(int width,int heigt,double videoWidth,double videoHeight,Point point){
         double scaleWidth=  width/videoWidth;
         double scaleHeight= heigt/videoHeight;
         point.x= (int) (point.x*scaleWidth);
         point.y= (int) (point.y*scaleHeight);
-        System.out.println(" point.x:"+ point.x);
-        System.out.println("scaleWidth:"+ scaleWidth);
-        System.out.println("scaleHeight:"+ scaleHeight);
-        System.out.println(" point.y:"+ point.y);
-        return point;
     }
     public static class Point {
         public  double x;
