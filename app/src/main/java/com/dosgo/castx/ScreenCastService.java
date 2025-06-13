@@ -152,9 +152,13 @@ public class ScreenCastService extends Service {
 
     public void startDecoding() {
         // 启动录制
-        videoEncoder.start();
+        if(videoEncoder!=null) {
+            videoEncoder.start();
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            audioEncoder.start();
+            if(audioEncoder!=null) {
+                audioEncoder.start();
+            }
         }
     }
     public void stopDecoding() {

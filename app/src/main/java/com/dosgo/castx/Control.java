@@ -41,10 +41,20 @@ class Control   {
                     try {
                         double x = jsonObject.getDouble("x");
                         double y = jsonObject.getDouble("y");
-                        int phoneX= (int) x;
-                        int phoneY= (int) y;
+
+                        double videoWidth = jsonObject.getDouble("videoWidth");
+                        double videoHeight = jsonObject.getDouble("videoHeight");
+
+
+                        Point  point=new Point(x,y);
+                         GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
+
+
+
+                        int phoneX= (int) point.x;
+                        int phoneY= (int) point.y;
                         service.clickAtPoint(phoneX, phoneY);
-                        System.out.println("click width:" + metrics.widthPixels + " x：" + x + "y:" + y);
+                        System.out.println("click width:" + metrics.widthPixels + " x：" + phoneX + "y:" + phoneY);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -82,14 +92,23 @@ class Control   {
                 if( type.equals("panstart")) {
                     double x = jsonObject.getDouble("x");
                     double y = jsonObject.getDouble("y");
-                    startX = (int) x;
-                    startY = (int) y;
+                    double videoWidth = jsonObject.getDouble("videoWidth");
+                    double videoHeight = jsonObject.getDouble("videoHeight");
+
+
+                    Point  point=new Point(x,y);
+                    point= GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
+
+
+
+                    startX = (int) point.x;
+                    startY = (int) point.y;
                     startTime = System.currentTimeMillis();
 
                 }
                 if( type.equals("panend")) {
-                    int x = (int) jsonObject.getDouble("x");
-                    int y = (int) jsonObject.getDouble("y");
+                    double x = (int) jsonObject.getDouble("x");
+                    double y = (int) jsonObject.getDouble("y");
                     int duration= (int) (System.currentTimeMillis()-startTime);
                     System.out.println("panend x:"+x+"y:"+y+"duration"+duration+"startX:"+startX+"startY:"+startY);
                     if(x<0){
@@ -98,7 +117,16 @@ class Control   {
                     if(y<0){
                         y=0;
                     }
-                    service.performSwipe(startX,startY,x,y,duration);
+
+                    double videoWidth = jsonObject.getDouble("videoWidth");
+                    double videoHeight = jsonObject.getDouble("videoHeight");
+
+
+                    Point  point=new Point(x,y);
+                   GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
+
+
+                    service.performSwipe(startX,startY, (int) point.x, (int) point.y,duration);
                     startX=0;
                     startY=0;
                 }
@@ -117,9 +145,31 @@ class Control   {
 
     }
 
+    public static Point GetRealPoint(int width,int heigt,double videoWidth,double videoHeight,Point point){
+        double scaleWidth=  width/videoWidth;
+        double scaleHeight= heigt/videoHeight;
+        point.x= (int) (point.x*scaleWidth);
+        point.y= (int) (point.y*scaleHeight);
+        System.out.println(" point.x:"+ point.x);
+        System.out.println("scaleWidth:"+ scaleWidth);
+        System.out.println("scaleHeight:"+ scaleHeight);
+        System.out.println(" point.y:"+ point.y);
+        return point;
+    }
+    public static class Point {
+        public  double x;
+        public  double y;
 
+        public Point(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
 
-
+        @Override
+        public String toString() {
+            return "(" + x + ", " + y + ")";
+        }
+    }
 
 
 
