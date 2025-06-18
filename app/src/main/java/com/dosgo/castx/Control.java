@@ -149,7 +149,19 @@ class Control   {
         double scaleWidth=  width/videoWidth;
         double scaleHeight= heigt/videoHeight;
         point.x= (int) (point.x*scaleWidth);
+        if(point.x>width){
+            point.x=width;
+        }
         point.y= (int) (point.y*scaleHeight);
+        if(point.y>heigt){
+            point.y=heigt;
+        }
+        if(point.y<0){
+            point.y=0;
+        }
+        if(point.x<0){
+            point.x=0;
+        }
     }
     public static class Point {
         public  double x;
@@ -165,8 +177,6 @@ class Control   {
             return "(" + x + ", " + y + ")";
         }
     }
-
-
 
 
     public static void setContext(Context context) {
