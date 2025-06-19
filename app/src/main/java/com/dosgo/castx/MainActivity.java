@@ -98,7 +98,6 @@ public class MainActivity extends Activity {
             startActivity(intent);
         });
         addrView = findViewById(R.id.addrView);
-        getAllIpv4Addresses();
         startMonitoring(this);
     }
 

@@ -4,20 +4,38 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.content.ContextCompat;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+
 
 public class ScrcpyClientActivity extends Activity   {
 
     private Button btnControl;
+
+    private TextView addrView;
+
+    String addrTxt="";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,9 +64,64 @@ public class ScrcpyClientActivity extends Activity   {
                 startService(new Intent(this, ScrcpyClientService.class));
             }
         });
-
+        addrView = findViewById(R.id.addrView);
+        startMonitoring(this);
     }
 
+    public  void startMonitoring(Context context) {
+        ConnectivityManager cm = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkRequest request = new NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                .build();
+
+        cm.registerNetworkCallback(request, new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                getAllIpv4Addresses();
+            }
+
+            @Override
+            public void onLost(Network network) {
+                getAllIpv4Addresses();
+            }
+        });
+    }
+
+    public void  getAllIpv4Addresses() {
+
+        addrTxt="";
+
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
+                 en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                if(intf.getName().indexOf("ap")==-1&&intf.getName().indexOf("wlan")==-1){
+                    continue;
+                }
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
+                     enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if(inetAddress==null){
+                        continue;
+                    }
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+
+                        if (inetAddress.getHostAddress()!=null){
+                            addrTxt=addrTxt+"\r\n"+"http://"+inetAddress.getHostAddress()+":8082/";
+                        }
+                    }
+                }
+            }
+            runOnUiThread(() -> {
+                addrView.setText(addrTxt);
+            });
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static boolean isChromeInstalled(Context context) {
         return isPackageInstalled(context, "com.android.chrome");
@@ -100,6 +173,7 @@ public class ScrcpyClientActivity extends Activity   {
         if (btnControl!=null){
             btnControl.setText(Status.scrcpyIsRunning? R.string.stopScrcpyClient:R.string.startScrcpyClient);
         }
+        getAllIpv4Addresses();
         super.onResume();
     }
 
