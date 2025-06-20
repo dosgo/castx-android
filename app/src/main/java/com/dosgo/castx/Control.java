@@ -3,6 +3,7 @@ package com.dosgo.castx;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.PointF;
 import android.net.Uri;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
@@ -12,6 +13,10 @@ import android.view.WindowManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import   castX.CastX;
 
 class Control   {
@@ -22,10 +27,8 @@ class Control   {
 
     private static boolean regJavaObj;
 
-    private static int startX=0;
-    private static int startY=0;
-    private static long startTime=0;
-    public static void cmd(String message) throws JSONException {
+
+    public static <TimedPoint> void cmd(String message) throws JSONException {
         DisplayMetrics metrics = new DisplayMetrics();
         WindowManager windowManager = (WindowManager) context.getSystemService(context.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
@@ -37,10 +40,11 @@ class Control   {
             String type = jsonObject.getString("type");
             if (service != null||type.equals("displayPower")) {
 
-                if( type.equals("left")) {
+                if( type.equals("click")) {
                     try {
                         double x = jsonObject.getDouble("x");
                         double y = jsonObject.getDouble("y");
+                        double duration = jsonObject.getDouble("duration");
 
                         double videoWidth = jsonObject.getDouble("videoWidth");
                         double videoHeight = jsonObject.getDouble("videoHeight");
@@ -53,7 +57,7 @@ class Control   {
 
                         int phoneX= (int) point.x;
                         int phoneY= (int) point.y;
-                        service.clickAtPoint(phoneX, phoneY);
+                        service.clickAtPoint(phoneX, phoneY, (long) duration);
                         System.out.println("click width:" + metrics.widthPixels + " x：" + phoneX + "y:" + phoneY);
 
                     } catch (Exception e) {
@@ -62,6 +66,7 @@ class Control   {
 
 
                 }
+
                 if( type.equals("keyboard")) {
                     String code = jsonObject.getString("code");
                     System.out.println("keyboard code：" + code);
@@ -83,19 +88,21 @@ class Control   {
                     Point  point=new Point(x,y);
                     GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
 
+                    List<PointF> pointList = new ArrayList<>();
+                        pointList.add(new PointF(
+                                (float) point.x,
+                                (float)point.y
+                        ));
 
 
-                    startX = (int) point.x;
-                    startY = (int) point.y;
-                    startTime = System.currentTimeMillis();
+                    service.handleRawTouch(type, pointList);
 
                 }
-                if( type.equals("panend")) {
+
+                if (type.equals("pan")){
                     double x = (int) jsonObject.getDouble("x");
                     double y = (int) jsonObject.getDouble("y");
-                    int duration= (int) (System.currentTimeMillis()-startTime);
-                    System.out.println("panend x:"+x+"y:"+y+"duration"+duration+"startX:"+startX+"startY:"+startY);
-                    if(x<0){
+                     if(x<0){
                         x=0;
                     }
                     if(y<0){
@@ -108,11 +115,38 @@ class Control   {
 
                     Point  point=new Point(x,y);
                     GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
+                    List<PointF> pointList = new ArrayList<>();
+                    pointList.add(new PointF(
+                            (float) point.x,
+                            (float)point.y
+                    ));
+
+                    service.handleRawTouch(type, pointList);
+                }
+                if( type.equals("panend")) {
+                    double x = (int) jsonObject.getDouble("x");
+                    double y = (int) jsonObject.getDouble("y");
+                   if(x<0){
+                        x=0;
+                    }
+                    if(y<0){
+                        y=0;
+                    }
+
+                    double videoWidth = jsonObject.getDouble("videoWidth");
+                    double videoHeight = jsonObject.getDouble("videoHeight");
 
 
-                    service.performSwipe(startX,startY, (int) point.x, (int) point.y,duration);
-                    startX=0;
-                    startY=0;
+                    Point  point=new Point(x,y);
+                    GetRealPoint(metrics.widthPixels,metrics.heightPixels, (int) videoWidth, (int) videoHeight,point);
+                    List<PointF> pointList = new ArrayList<>();
+                    pointList.add(new PointF(
+                            (float) point.x,
+                            (float)point.y
+                    ));
+
+
+                    service.handleRawTouch(type, pointList);
                 }
                 if(type.equals("displayPower")){
                     int action= (int) jsonObject.getDouble("action");
