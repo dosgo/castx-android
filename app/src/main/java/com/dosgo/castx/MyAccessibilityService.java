@@ -142,7 +142,11 @@ public class MyAccessibilityService extends AccessibilityService {
             // 1. 构建点击手势
             GestureDescription.Builder builder = new GestureDescription.Builder();
             Path path = new Path();
-            path.moveTo(x, y);
+            try{
+                path.moveTo(x, y);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
             builder.addStroke(new GestureDescription.StrokeDescription(path, 0, 50)); // 点击持续50ms
 
             // 2. 执行手势
@@ -157,8 +161,12 @@ public class MyAccessibilityService extends AccessibilityService {
 
 
         Path path = new Path();
-        path.moveTo(startX, startY);
-        path.lineTo(endX, endY);
+        try{
+            path.moveTo(startX, startY);
+            path.lineTo(endX, endY);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
 
         GestureDescription gesture = new GestureDescription.Builder()
                 .addStroke(new GestureDescription.StrokeDescription(path, 0, duration))

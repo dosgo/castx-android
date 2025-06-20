@@ -71,8 +71,6 @@ public class AudioEncoder {
         AudioPlaybackCaptureConfiguration config =
                 new AudioPlaybackCaptureConfiguration.Builder(mediaProjection)
                         .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
-                        .addMatchingUsage(AudioAttributes.USAGE_GAME)
-                        .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN)
                         .build();
 
         if (ActivityCompat.checkSelfPermission(this.context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {

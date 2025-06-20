@@ -72,23 +72,7 @@ class Control   {
                         service.simulateBackKey();
                     }
                 }
-                if( type.equals("swipe")) {
-                    String code = jsonObject.getString("code");
-                    System.out.println("keyboard code：" + code);
 
-                    if(code.equals("left")){
-                        service.performSwipeLeft( metrics.widthPixels, metrics.heightPixels);
-                    }
-                    if(code.equals("right")){
-                        service.performSwipeRight( metrics.widthPixels, metrics.heightPixels);
-                    }
-                    if(code.equals("up")){
-                        service.performSwipeUp( metrics.widthPixels, metrics.heightPixels);
-                    }
-                    if(code.equals("down")){
-                        service.performSwipeDown( metrics.widthPixels, metrics.heightPixels);
-                    }
-                }
                 if( type.equals("panstart")) {
                     double x = jsonObject.getDouble("x");
                     double y = jsonObject.getDouble("y");
