@@ -28,7 +28,7 @@ class Control   {
     private static boolean regJavaObj;
 
 
-    public static <TimedPoint> void cmd(String message) throws JSONException {
+    public static  void cmd(String message) throws JSONException {
         DisplayMetrics metrics = new DisplayMetrics();
         WindowManager windowManager = (WindowManager) context.getSystemService(context.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
@@ -144,8 +144,6 @@ class Control   {
                             (float) point.x,
                             (float)point.y
                     ));
-
-
                     service.handleRawTouch(type, pointList);
                 }
                 if(type.equals("displayPower")){

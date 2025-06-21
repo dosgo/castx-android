@@ -117,15 +117,6 @@ public class MyAccessibilityService extends AccessibilityService {
         if (touchPoints.size() < 2) return;
 
         long duration = System.currentTimeMillis() - touchStartTime;
-        PointF start = touchPoints.get(0);
-        PointF end = touchPoints.get(touchPoints.size() - 1);
-
-        // 计算移动距离
-        float distance = (float) Math.sqrt(
-                Math.pow(end.x - start.x, 2) +
-                        Math.pow(end.y - start.y, 2)
-        );
-
 
         // 滑动操作
         performSwipe(touchPoints, duration);
@@ -143,12 +134,13 @@ public class MyAccessibilityService extends AccessibilityService {
         for (int i = 1; i < points.size(); i++) {
             path.lineTo(points.get(i).x, points.get(i).y);
         }
+        System.out.println("points size:"+ points.size());
 
         // 确保最小持续时间
-        long minDuration = Math.max(100, Math.min(500, points.size() * 10));
+       // long minDuration = Math.max(100, Math.min(500, points.size() * 10));
 
         GestureDescription gesture = new GestureDescription.Builder()
-                .addStroke(new GestureDescription.StrokeDescription(path, 0, minDuration))
+                .addStroke(new GestureDescription.StrokeDescription(path, 0, duration))
                 .build();
 
         dispatchGesture(gesture, null, null);
