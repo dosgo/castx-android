@@ -158,7 +158,7 @@ public class H264PlayerActivity extends Activity   {
         Control.setActivity(this);
         String url= String.valueOf(urlEt.getText());
         System.out.println("play:"+url);
-        CastX.startWebRtcReceive(url+"/sendOffer");
+        CastX.startCastXClient(url,"eee",2400);
     }
 
 
