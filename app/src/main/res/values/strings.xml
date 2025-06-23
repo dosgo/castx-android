@@ -9,7 +9,8 @@
     <string name="startScreenMirroring">Start Screen Mirroring</string>
     <string name="startScrcpyClient">Start the scrcpy client</string>
     <string name="stopScrcpyClient">Stop the scrcpy client</string>
-    <string name="openBrowser">Open your browser</string>
+    <string name="openNative">View</string>
+    <string name="openBrowser">Browser View</string>
 
     <string name="stopScreenMirroring">Stop Screen Mirroring</string>
     <string name="stopScreenMirroringMsg"> Screen casting has stopped</string>

@@ -51,6 +51,15 @@ public class ScrcpyClientActivity extends Activity   {
             }
             openEdgeCustomTab();
         });
+        findViewById(R.id.btn_openNative).setOnClickListener(v -> {
+            if (! Status.scrcpyIsRunning) {
+                Toast.makeText(this, R.string.scrcpyNotStarted, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            openView();
+        });
+
+
 
 
         btnControl.setOnClickListener(v -> {
@@ -168,6 +177,13 @@ public class ScrcpyClientActivity extends Activity   {
             Toast.makeText(this, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
         }
     }
+
+
+    private void openView() {
+        Intent intent = new Intent(this, H264PlayerActivity.class);
+        startActivity(intent);
+    }
+
     @Override
     protected void onResume() {
         if (btnControl!=null){

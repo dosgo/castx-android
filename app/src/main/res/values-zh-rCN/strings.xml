@@ -10,7 +10,8 @@
     <string name="stopScreenMirroring">停止投屏</string>
     <string name="startScrcpyClient">启动scrcpy客户端</string>
     <string name="stopScrcpyClient">停止scrcpy客户端</string>
-    <string name="openBrowser">打开浏览器</string>
+    <string name="openBrowser">浏览器查看</string>
+    <string name="openNative">查看</string>
     <string name="stopScreenMirroringMsg"> 投屏已停止</string>
     <string name="scrcpyNotStarted">Scrcpy客户端没有启动</string>
     <string name="chromeNoInstall">你没有安装edge或者chrome浏览器不能使用</string>

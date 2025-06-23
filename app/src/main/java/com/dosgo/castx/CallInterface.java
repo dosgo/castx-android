@@ -4,7 +4,7 @@ import org.json.JSONException;
 
 import castX.JavaCallbackInterface;
 public class CallInterface implements JavaCallbackInterface {
-    public  void callString(String param) {
+    public  void controlCall(String param) {
         try {
             System.out.println("callString param:"+param);
             Control.cmd(param);
@@ -14,10 +14,7 @@ public class CallInterface implements JavaCallbackInterface {
         return ;
     }
 
-    public  void callBytes(long cmd,byte[] param,long timestamp) {
-        Control.dataCall(cmd,param,timestamp);
-        return ;
-    }
+
 
     public  void webRtcConnectionStateChange(long count) {
         if(count<1){
