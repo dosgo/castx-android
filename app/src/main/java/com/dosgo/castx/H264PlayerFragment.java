@@ -131,9 +131,12 @@ public class H264PlayerFragment extends Fragment {
         // 4. 绑定 Surface 并启动解码器
         mediaCodec.configure(format, surface, null, 0);
         mediaCodec.start();
+
+        startDecoding();
     }
 
     private void startReceive(int port ){
+        isRunning=true;
         receiveTrread = new Thread(() -> {
             try {
                 scrcpyReceive=new ScrcpyReceive( port,1);
@@ -142,6 +145,7 @@ public class H264PlayerFragment extends Fragment {
 
                 var headerArray = new byte[12]; // 8字节(long) + 4字节(int)
                 var dataArray = new byte[1024*1024*5]; // 5M
+                boolean one=true;
                 while (isRunning) {
                     dataInputStream.readFully(headerArray);
                     long pts= ByteBuffer.wrap(headerArray, 0, 8)
@@ -154,14 +158,24 @@ public class H264PlayerFragment extends Fragment {
 
                     dataInputStream.readFully(dataArray,0,  len);
 
-                    int nalType = dataArray[5] & 0x1F;
+                    int nalType = dataArray[4] & 0x1F;
                     if(nalType==7){
-                        sps=Arrays.copyOfRange(dataArray, 5, len+5);
+                        System.out.println("revice sps len:"+len);
+                        sps=Arrays.copyOfRange(dataArray, 0, len);
+                        System.out.println("revice sps len111:"+sps.length);
                     }else if(nalType==8){
-                        pps=Arrays.copyOfRange(dataArray, 5, len+5);
-                        initMediaCodec(miniSurface.getHolder().getSurface());
+
+                        pps=Arrays.copyOfRange(dataArray, 0, len);
+                        System.out.println("revice pps len:"+len);
+                        if(one) {
+                            initMediaCodec(miniSurface.getHolder().getSurface());
+                            one=false;
+                        }
                     }else {
-                        boolean isKeyFrame = isKeyFrame(dataArray);
+                        boolean isKeyFrame = nalType == 5?true:false;
+                        if(isKeyFrame ){
+                            System.out.println("revice isKeyFrame\r\n");
+                        }
                         frameQueue.put(new H264Frame(dataArray, len, pts, isKeyFrame));
                     }
                 }
@@ -172,14 +186,6 @@ public class H264PlayerFragment extends Fragment {
         receiveTrread.start();
     }
 
-    public static boolean isKeyFrame(byte[] nalu) {
-        if (nalu == null || nalu.length == 0) {
-            return false;
-        }
-        // 获取 NAL 单元类型（首字节低5位）
-        int nalType = nalu[5] & 0x1F;
-        return nalType == 5; // 5=IDR帧
-    }
     // 启动解码线程
     private void startDecoding() {
         System.out.println("startDecoding\r\n");
@@ -213,6 +219,7 @@ public class H264PlayerFragment extends Fragment {
 
                 } catch (Exception e) {
                     e.printStackTrace();
+                    break;
                 }
             }
         });
@@ -232,6 +239,7 @@ public class H264PlayerFragment extends Fragment {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    break;
                 }
             }
         });
@@ -268,7 +276,6 @@ public class H264PlayerFragment extends Fragment {
             return ;
         }
         startReceive((int) port);
-        startDecoding();
     }
 
 
