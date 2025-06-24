@@ -59,16 +59,6 @@
         android:layout_height="wrap_content"
         android:text="@string/startScreenMirroring"
          />
-    <Button
-        android:id="@+id/btn_receive"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="receive" />
-    <Button
-        android:id="@+id/btn_scrcpy"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="scrcpy" />
 
 
 

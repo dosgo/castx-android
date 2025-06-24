@@ -1,11 +1,7 @@
 package com.dosgo.castx;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.PointF;
-import android.net.Uri;
-import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -23,7 +19,7 @@ class Control   {
 
     private static Context context;
 
-    private static H264PlayerActivity play;
+    private static H264PlayerFragment play;
 
     private static boolean regJavaObj;
 
@@ -208,7 +204,7 @@ class Control   {
         regJavaObj = false;
     }
 
-    public static void setActivity(H264PlayerActivity _play) {
+    public static void setActivity(H264PlayerFragment _play) {
         Control.play = _play;
         if(!regJavaObj) {
             regJavaObj = true;

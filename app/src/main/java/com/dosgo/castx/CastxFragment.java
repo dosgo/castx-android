@@ -36,7 +36,7 @@ import java.util.Enumeration;
 
 public class CastxFragment extends Fragment {
     private static final int REQUEST_CODE_SCREEN_CAPTURE = 1001;
-    private Button btnControl,btn_receive,btn_scrcpy;
+    private Button btnControl;
     private TextView addrView;
     String addrTxt="";
     private EditText passwordInput;
@@ -93,15 +93,7 @@ public class CastxFragment extends Fragment {
 
             }
         });
-        btn_receive=view.findViewById(R.id.btn_receive);
-        btn_receive.setOnClickListener(v -> {
-            openView();
-        });
-        btn_scrcpy=view.findViewById(R.id.btn_scrcpy);
-        btn_scrcpy.setOnClickListener(v -> {
-            Intent intent = new Intent( getContext(), ScrcpyClientActivity.class);
-            startActivity(intent);
-        });
+
         addrView = view.findViewById(R.id.addrView);
         startMonitoring(context);
     }
@@ -281,12 +273,6 @@ public class CastxFragment extends Fragment {
     private void requestAccessibilityPermission() {
         Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-    }
-
-
-    private void openView() {
-        Intent intent = new Intent( getContext(), H264PlayerActivity.class);
         startActivity(intent);
     }
 

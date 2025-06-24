@@ -7,17 +7,18 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.RadioGroup;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity
-        implements BottomNavigationView.OnNavigationItemSelectedListener {
+        implements RadioGroup.OnCheckedChangeListener  {
 
-    private BottomNavigationView bottomNavigation;
-    private Fragment homeFragment;
-    private Fragment searchFragment;
-    private Fragment profileFragment;
+    private Fragment castxFragment;
+    private Fragment scrcpyClientFragment;
+    private Fragment h264PlayerFragment;
     private Fragment currentFragment;
+    private RadioGroup tabBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,34 +26,36 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         // 初始化Fragment实例
-        homeFragment = new CastxFragment();
-        searchFragment = new CastxFragment();
-        profileFragment = new CastxFragment();
-        currentFragment = homeFragment;
+        castxFragment = new CastxFragment();
+        scrcpyClientFragment = new ScrcpyClientFragment();
+        h264PlayerFragment = new H264PlayerFragment();
+        currentFragment = castxFragment;
 
 
         // 默认加载首页Fragment
-        loadFragment(homeFragment);
+        loadFragment(castxFragment);
+        tabBar = findViewById(R.id.tab_bar);
+        tabBar.setOnCheckedChangeListener(this);
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
+    public void onCheckedChanged(RadioGroup group, int checkedId) {
 
-        if (itemId == R.id.castx_server && currentFragment != homeFragment) {
-            loadFragment(homeFragment);
-            currentFragment = homeFragment;
-            return true;
-        } else if (itemId == R.id.scrcpy_client && currentFragment != searchFragment) {
-            loadFragment(searchFragment);
-            currentFragment = searchFragment;
-            return true;
-        } else if (itemId == R.id.castx_client && currentFragment != profileFragment) {
-            loadFragment(profileFragment);
-            currentFragment = profileFragment;
-            return true;
+        System.out.println("onNavigationItemSelected:"+checkedId);
+        if (checkedId  == R.id.castx_server && currentFragment != castxFragment) {
+            loadFragment(castxFragment);
+            currentFragment = castxFragment;
+            return ;
+        } else if (checkedId == R.id.scrcpy_client && currentFragment != scrcpyClientFragment) {
+            loadFragment(scrcpyClientFragment);
+            currentFragment = scrcpyClientFragment;
+            return ;
+        } else if (checkedId == R.id.castx_client && currentFragment != h264PlayerFragment) {
+            loadFragment(h264PlayerFragment);
+            currentFragment = h264PlayerFragment;
+            return ;
         }
-        return false;
+        return ;
     }
 
     private void loadFragment(Fragment fragment) {
@@ -67,14 +70,14 @@ public class MainActivity extends AppCompatActivity
         }
 
         // 隐藏其他fragments
-        if (homeFragment != null && homeFragment != fragment && homeFragment.isAdded()) {
-            transaction.hide(homeFragment);
+        if (castxFragment != null && castxFragment != fragment && castxFragment.isAdded()) {
+            transaction.hide(castxFragment);
         }
-        if (searchFragment != null && searchFragment != fragment && searchFragment.isAdded()) {
-            transaction.hide(searchFragment);
+        if (scrcpyClientFragment != null && scrcpyClientFragment != fragment && scrcpyClientFragment.isAdded()) {
+            transaction.hide(scrcpyClientFragment);
         }
-        if (profileFragment != null && profileFragment != fragment && profileFragment.isAdded()) {
-            transaction.hide(profileFragment);
+        if (h264PlayerFragment != null && h264PlayerFragment != fragment && h264PlayerFragment.isAdded()) {
+            transaction.hide(h264PlayerFragment);
         }
 
         transaction.commit();

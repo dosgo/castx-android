@@ -1,18 +1,25 @@
 package com.dosgo.castx;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+
+import androidx.fragment.app.Fragment;
 
 import castX.CastX;
 
@@ -26,7 +33,7 @@ import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class H264PlayerActivity extends Activity   {
+public class H264PlayerFragment extends Fragment {
     private MediaCodec mediaCodec;
 
     private Thread decoderThread,decoderOutThread, receiveTrread;
@@ -49,42 +56,62 @@ public class H264PlayerActivity extends Activity   {
 
     private ScrcpyReceive scrcpyReceive;
 
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_player);
+    public View onCreateView( LayoutInflater inflater,
+                              ViewGroup container,
+                              Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.activity_player, container, false);
+    }
+
+    @Override
+    public void onViewCreated( View view,  Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
 
         // 初始化视图
-        miniSurface = findViewById(R.id.surface_view);
-        fullscreenSurface = findViewById(R.id.fullscreen_surface);
-        miniContainer = findViewById(R.id.mini_player_container);
-        fullscreenContainer = findViewById(R.id.fullscreen_container);
+        miniSurface = view.findViewById(R.id.surface_view);
+        fullscreenSurface = view.findViewById(R.id.fullscreen_surface);
+        miniContainer = view.findViewById(R.id.mini_player_container);
+        fullscreenContainer = view.findViewById(R.id.fullscreen_container);
 
         // 设置全屏/小窗切换按钮
-        findViewById(R.id.btn_expand).setOnClickListener(v -> enterFullscreen());
-        findViewById(R.id.btn_shrink).setOnClickListener(v -> exitFullscreen());
-        findViewById(R.id.play).setOnClickListener(v->play());
+        view.findViewById(R.id.btn_expand).setOnClickListener(v -> enterFullscreen());
+        view.findViewById(R.id.btn_shrink).setOnClickListener(v -> exitFullscreen());
+        view.findViewById(R.id.play).setOnClickListener(v->play());
 
-        urlEt=findViewById(R.id.url);
-        et_password=findViewById(R.id.et_password);
-        passwordve=findViewById(R.id.passwordve);
+        urlEt=view.findViewById(R.id.url);
+        et_password=view.findViewById(R.id.et_password);
+        passwordve=view.findViewById(R.id.passwordve);
 
-        isScrcpy = getIntent().getBooleanExtra("isScrcpy",false);
-        if(isScrcpy) {
-            String wsUrl = getIntent().getStringExtra("wsUrl");
-            String password=getIntent().getStringExtra("password");
-            urlEt.setText(wsUrl);
-            urlEt.setEnabled(false);
-            et_password.setText(password);
-            passwordve.setVisibility(View.GONE);
-        }else {
-            urlEt.setEnabled(true);
-            passwordve.setVisibility(View.VISIBLE);
+        if(getArguments()!=null) {
+            isScrcpy = getArguments().getBoolean("isScrcpy");
+            if (isScrcpy) {
+                String wsUrl = getArguments().getString("wsUrl");
+                String password = getArguments().getString("password");
+                urlEt.setText(wsUrl);
+                urlEt.setEnabled(false);
+                et_password.setText(password);
+                passwordve.setVisibility(View.GONE);
+            } else {
+                urlEt.setEnabled(true);
+                passwordve.setVisibility(View.VISIBLE);
+            }
         }
     }
 
 
 
+    private void openView() {
+        SharedPreferences prefs = getContext().getSharedPreferences("config", Context.MODE_PRIVATE);
+        String password = prefs.getString("password", "");
+
+        Intent intent = new Intent(getContext(), H264PlayerFragment.class);
+        intent.putExtra("wsUrl", "ws://127.0.0.1:8082/ws");
+        intent.putExtra("isScrcpy", true);
+        intent.putExtra("password", password);
+        startActivity(intent);
+    }
 
     // 初始化 MediaCodec 解码器
     private void initMediaCodec(Surface surface) throws IOException {
@@ -226,12 +253,11 @@ public class H264PlayerActivity extends Activity   {
 
 
     private void play() {
-        Control.setActivity(this);
         String url= String.valueOf(urlEt.getText());
         String password =String.valueOf(et_password.getText());
         System.out.println("play:"+ password);
         DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
         display.getRealMetrics(metrics);
         long port=CastX.startCastXClient(url,password, metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels);
@@ -254,7 +280,7 @@ public class H264PlayerActivity extends Activity   {
         resetMediaCodecSurface(fullscreenSurface.getHolder().getSurface());
 
         // 4. 隐藏状态栏和导航栏
-        getWindow().getDecorView().setSystemUiVisibility(
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
@@ -273,7 +299,7 @@ public class H264PlayerActivity extends Activity   {
         resetMediaCodecSurface(miniSurface.getHolder().getSurface());
 
         // 4. 恢复系统UI
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
     }
 
     private void resetMediaCodecSurface(Surface surface) {
@@ -289,12 +315,12 @@ public class H264PlayerActivity extends Activity   {
 
 
     // 处理返回键（全屏时先退出全屏）
-    @Override
+   // @Override
     public void onBackPressed() {
         if (isFullscreen) {
             exitFullscreen();
         } else {
-            super.onBackPressed();
+           // super.onBackPressed();
         }
     }
 }

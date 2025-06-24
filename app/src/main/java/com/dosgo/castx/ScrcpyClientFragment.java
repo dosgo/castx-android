@@ -1,10 +1,7 @@
 package com.dosgo.castx;
 
-import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -13,14 +10,16 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.browser.customtabs.CustomTabsIntent;
-import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -29,7 +28,7 @@ import java.net.SocketException;
 import java.util.Enumeration;
 
 
-public class ScrcpyClientActivity extends Activity   {
+public class ScrcpyClientFragment extends Fragment {
 
     private Button btnControl;
 
@@ -37,42 +36,43 @@ public class ScrcpyClientActivity extends Activity   {
 
     String addrTxt="";
 
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scrcpy);
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.activity_scrcpy, container, false);
+    }
 
-        btnControl = findViewById(R.id.btn_control);
+    @Override
+    public void onViewCreated( View view,  Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
+        btnControl = view.findViewById(R.id.btn_control);
+        Context context=getContext();
         //
-        findViewById(R.id.btn_open).setOnClickListener(v -> {
+        view.findViewById(R.id.btn_open).setOnClickListener(v -> {
             if (! Status.scrcpyIsRunning) {
-                Toast.makeText(this, R.string.scrcpyNotStarted, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.scrcpyNotStarted, Toast.LENGTH_SHORT).show();
                 return;
             }
             openEdgeCustomTab();
         });
-        findViewById(R.id.btn_openNative).setOnClickListener(v -> {
-            if (! Status.scrcpyIsRunning) {
-                Toast.makeText(this, R.string.scrcpyNotStarted, Toast.LENGTH_SHORT).show();
-                return;
-            }
-            openView();
-        });
+
 
         btnControl.setOnClickListener(v -> {
             if ( Status.scrcpyIsRunning) {
-                stopService(new Intent(this, ScrcpyClientService.class));
+                context.stopService(new Intent(context, ScrcpyClientService.class));
                 btnControl.setText(R.string.startScrcpyClient);
                 Status.scrcpyIsRunning=false;
             } else {
                 btnControl.setText(R.string.stopScrcpyClient);
                 Status.scrcpyIsRunning=true;
-                startService(new Intent(this, ScrcpyClientService.class));
+                context.startService(new Intent(context, ScrcpyClientService.class));
             }
         });
-        addrView = findViewById(R.id.addrView);
-        startMonitoring(this);
+        addrView = view.findViewById(R.id.addrView);
+        startMonitoring(context);
     }
 
     public  void startMonitoring(Context context) {
@@ -122,7 +122,7 @@ public class ScrcpyClientActivity extends Activity   {
                     }
                 }
             }
-            runOnUiThread(() -> {
+            getActivity().runOnUiThread(() -> {
                 addrView.setText(addrTxt);
             });
         } catch (SocketException e) {
@@ -155,41 +155,31 @@ public class ScrcpyClientActivity extends Activity   {
     private void openEdgeCustomTab() {
         String url = "http://127.0.0.1:8082/scrcpy.html";
         CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-
+        Context context=getContext();
         // 自定义UI设置
 
        // builder.setShowTitle(true);
         // 设置Edge浏览器（需要用户安装）
         CustomTabsIntent customTabsIntent = builder.build();
         // 检查Edge是否安装
-        if(isEdgeInstalled(this)) {
+        if(isEdgeInstalled(context)) {
             customTabsIntent.intent.setPackage("com.microsoft.emmx");//edge
-            customTabsIntent.launchUrl(this, Uri.parse(url));
-        }else if(isChromeInstalled(this)) {
+            customTabsIntent.launchUrl(context, Uri.parse(url));
+        }else if(isChromeInstalled(context)) {
             customTabsIntent.intent.setPackage("com.android.chrome");//chrmoe
-            customTabsIntent.launchUrl(this, Uri.parse(url));
-        }else if(isFirefoxInstalled(this)){
+            customTabsIntent.launchUrl(context, Uri.parse(url));
+        }else if(isFirefoxInstalled(context)){
             customTabsIntent.intent.setPackage("org.mozilla.firefox");//Firefox
-            customTabsIntent.launchUrl(this, Uri.parse(url));
+            customTabsIntent.launchUrl(context, Uri.parse(url));
         } else{
-            Toast.makeText(this, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
         }
     }
 
 
-    private void openView() {
-        SharedPreferences prefs = getSharedPreferences("config", Context.MODE_PRIVATE);
-        String password = prefs.getString("password", "");
-
-        Intent intent = new Intent(this, H264PlayerActivity.class);
-        intent.putExtra("wsUrl", "ws://127.0.0.1:8082/ws");
-        intent.putExtra("isScrcpy", true);
-        intent.putExtra("password", password);
-        startActivity(intent);
-    }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         if (btnControl!=null){
             btnControl.setText(Status.scrcpyIsRunning? R.string.stopScrcpyClient:R.string.startScrcpyClient);
         }
