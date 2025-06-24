@@ -15,7 +15,9 @@
     <string name="stopScreenMirroringMsg"> 投屏已停止</string>
     <string name="scrcpyNotStarted">Scrcpy客户端没有启动</string>
     <string name="chromeNoInstall">你没有安装edge或者chrome浏览器不能使用</string>
-
+    <string name="castxServer">投屏</string>
+    <string name="scrcpyClient">Scrcpy客户端</string>
+    <string name="castxClient">接收投屏</string>
     <string name="scrcpyurl">scrcpy地址:</string>
     <string name="wsUrl">ws Url:</string>
 </resources>

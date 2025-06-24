@@ -12,6 +12,11 @@
     <string name="openNative">View</string>
     <string name="openBrowser">Browser View</string>
 
+
+
+    <string name="castxServer">Castx Server</string>
+    <string name="scrcpyClient">Scrcpy Client</string>
+    <string name="castxClient">Castx Client</string>
     <string name="stopScreenMirroring">Stop Screen Mirroring</string>
     <string name="stopScreenMirroringMsg"> Screen casting has stopped</string>
     <string name="scrcpyNotStarted">Scrcpy client not started</string>

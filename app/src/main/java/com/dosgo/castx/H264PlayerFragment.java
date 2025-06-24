@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
@@ -261,6 +262,11 @@ public class H264PlayerFragment extends Fragment {
         Display display = windowManager.getDefaultDisplay();
         display.getRealMetrics(metrics);
         long port=CastX.startCastXClient(url,password, metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels);
+        if(port<1){
+            Toast.makeText(getContext(), "connect err", Toast.LENGTH_SHORT).show();
+
+            return ;
+        }
         startReceive((int) port);
         startDecoding();
     }

@@ -25,20 +25,23 @@
             android:checked="true"
             android:textColor="@color/tab_text_selector"
             android:background="@drawable/tab_background_selector"
-            android:text="castx server" />
+            android:textSize="16sp"
+            android:text="@string/castxServer" />
 
         <RadioButton
             android:id="@+id/scrcpy_client"
             style="@style/TabButtonStyle"
             android:textColor="@color/tab_text_selector"
             android:background="@drawable/tab_background_selector"
-            android:text="scrcpy Client" />
+            android:textSize="16sp"
+            android:text="@string/scrcpyClient" />
 
         <RadioButton
             android:id="@+id/castx_client"
             style="@style/TabButtonStyle"
             android:textColor="@color/tab_text_selector"
             android:background="@drawable/tab_background_selector"
-            android:text="castx client" />
+            android:textSize="16sp"
+            android:text="@string/castxClient" />
     </RadioGroup>
 </LinearLayout>
