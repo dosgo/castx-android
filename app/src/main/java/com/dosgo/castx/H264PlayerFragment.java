@@ -9,6 +9,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -120,7 +121,7 @@ public class H264PlayerFragment extends Fragment {
         mediaCodec = MediaCodec.createDecoderByType("video/avc");
 
         // 2. 配置 MediaFormat (需要 SPS 和 PPS)
-        format = MediaFormat.createVideoFormat("video/avc", 1280, 720); // 分辨率需与实际流匹配
+        format = MediaFormat.createVideoFormat("video/avc", 864, 1920); // 分辨率需与实际流匹配
 
         // 3. 设置关键参数（从流的头部提取或硬编码）
         format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline);
@@ -161,22 +162,25 @@ public class H264PlayerFragment extends Fragment {
                     int nalType = dataArray[4] & 0x1F;
                     if(nalType==7){
                         System.out.println("revice sps len:"+len);
-                        sps=Arrays.copyOfRange(dataArray, 0, len);
+                        sps=Arrays.copyOfRange(dataArray, 4, len);
                         System.out.println("revice sps len111:"+sps.length);
                     }else if(nalType==8){
 
-                        pps=Arrays.copyOfRange(dataArray, 0, len);
+                        pps=Arrays.copyOfRange(dataArray, 4, len);
                         System.out.println("revice pps len:"+len);
                         if(one) {
                             initMediaCodec(miniSurface.getHolder().getSurface());
                             one=false;
                         }
                     }else {
-                        boolean isKeyFrame = nalType == 5?true:false;
+                        boolean isKeyFrame =nalType == 5?true:false;
                         if(isKeyFrame ){
                             System.out.println("revice isKeyFrame\r\n");
                         }
-                        frameQueue.put(new H264Frame(dataArray, len, pts, isKeyFrame));
+                        System.out.println("revice data len"+len+"pts:"+pts);
+                        byte[] data=Arrays.copyOfRange(dataArray, 4, len);
+                        Log.d("revice data", Arrays.toString(data));
+                        frameQueue.put(new H264Frame(data, len-4, pts, isKeyFrame));
                     }
                 }
             } catch (Exception e) {
@@ -269,7 +273,9 @@ public class H264PlayerFragment extends Fragment {
         WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
         display.getRealMetrics(metrics);
-        long port=CastX.startCastXClient(url,password, metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels);
+        int maxSize=metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels;
+        System.out.println("play maxSize:"+maxSize);
+        long port=CastX.startCastXClient(url,password,maxSize);
         if(port<1){
             Toast.makeText(getContext(), "connect err", Toast.LENGTH_SHORT).show();
 
