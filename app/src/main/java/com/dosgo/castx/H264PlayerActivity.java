@@ -1,30 +1,35 @@
 package com.dosgo.castx;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.Surface;
-import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.widget.Button;
+import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.LinearLayout;
+
 import castX.CastX;
 
 
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class H264PlayerActivity extends Activity   {
     private MediaCodec mediaCodec;
 
-    private Thread decoderThread,decoderOutThread;
+    private Thread decoderThread,decoderOutThread, receiveTrread;
     private boolean isRunning = false;
     private boolean isFullscreen = false;
 
@@ -33,10 +38,16 @@ public class H264PlayerActivity extends Activity   {
     private SurfaceView miniSurface, fullscreenSurface;
     private View miniContainer, fullscreenContainer;
 
-    private EditText urlEt;
+    private EditText urlEt,et_password;
+
+    private  LinearLayout   passwordve;
+
+    private  boolean isScrcpy;
     BlockingQueue<H264Frame> frameQueue = new LinkedBlockingQueue<>(500);
     byte[] sps ={}; // SPS 数据
      byte[] pps = {}; // PPS 数据
+
+    private ScrcpyReceive scrcpyReceive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +66,21 @@ public class H264PlayerActivity extends Activity   {
         findViewById(R.id.play).setOnClickListener(v->play());
 
         urlEt=findViewById(R.id.url);
+        et_password=findViewById(R.id.et_password);
+        passwordve=findViewById(R.id.passwordve);
 
+        isScrcpy = getIntent().getBooleanExtra("isScrcpy",false);
+        if(isScrcpy) {
+            String wsUrl = getIntent().getStringExtra("wsUrl");
+            String password=getIntent().getStringExtra("password");
+            urlEt.setText(wsUrl);
+            urlEt.setEnabled(false);
+            et_password.setText(password);
+            passwordve.setVisibility(View.GONE);
+        }else {
+            urlEt.setEnabled(true);
+            passwordve.setVisibility(View.VISIBLE);
+        }
     }
 
 
@@ -74,11 +99,59 @@ public class H264PlayerActivity extends Activity   {
         format.setByteBuffer("csd-0", ByteBuffer.wrap(sps));
         format.setByteBuffer("csd-1", ByteBuffer.wrap(pps));
 
+
         // 4. 绑定 Surface 并启动解码器
         mediaCodec.configure(format, surface, null, 0);
         mediaCodec.start();
     }
 
+    private void startReceive(int port ){
+        receiveTrread = new Thread(() -> {
+            try {
+                scrcpyReceive=new ScrcpyReceive( port,1);
+                InputStream inputStream=scrcpyReceive.getInputStream();
+                DataInputStream dataInputStream=new DataInputStream(inputStream);
+
+                var headerArray = new byte[12]; // 8字节(long) + 4字节(int)
+                var dataArray = new byte[1024*1024*5]; // 5M
+                while (isRunning) {
+                    dataInputStream.readFully(headerArray);
+                    long pts= ByteBuffer.wrap(headerArray, 0, 8)
+                            .order(ByteOrder.BIG_ENDIAN)
+                            .getLong();
+
+                    int len= ByteBuffer.wrap(headerArray, 8, 4)
+                            .order(ByteOrder.BIG_ENDIAN)
+                            .getInt();
+
+                    dataInputStream.readFully(dataArray,0,  len);
+
+                    int nalType = dataArray[5] & 0x1F;
+                    if(nalType==7){
+                        sps=Arrays.copyOfRange(dataArray, 5, len+5);
+                    }else if(nalType==8){
+                        pps=Arrays.copyOfRange(dataArray, 5, len+5);
+                        initMediaCodec(miniSurface.getHolder().getSurface());
+                    }else {
+                        boolean isKeyFrame = isKeyFrame(dataArray);
+                        frameQueue.put(new H264Frame(dataArray, len, pts, isKeyFrame));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        receiveTrread.start();
+    }
+
+    public static boolean isKeyFrame(byte[] nalu) {
+        if (nalu == null || nalu.length == 0) {
+            return false;
+        }
+        // 获取 NAL 单元类型（首字节低5位）
+        int nalType = nalu[5] & 0x1F;
+        return nalType == 5; // 5=IDR帧
+    }
     // 启动解码线程
     private void startDecoding() {
         System.out.println("startDecoding\r\n");
@@ -87,8 +160,6 @@ public class H264PlayerActivity extends Activity   {
 
             while (isRunning) {
                 try {
-
-
 
                     // 1. 获取输入缓冲区
                     int inputBufferIndex = mediaCodec.dequeueInputBuffer(10000);
@@ -157,8 +228,15 @@ public class H264PlayerActivity extends Activity   {
     private void play() {
         Control.setActivity(this);
         String url= String.valueOf(urlEt.getText());
-        System.out.println("play:"+url);
-        CastX.startCastXClient(url,"eee",2400);
+        String password =String.valueOf(et_password.getText());
+        System.out.println("play:"+ password);
+        DisplayMetrics metrics = new DisplayMetrics();
+        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        Display display = windowManager.getDefaultDisplay();
+        display.getRealMetrics(metrics);
+        long port=CastX.startCastXClient(url,password, metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels);
+        startReceive((int) port);
+        startDecoding();
     }
 
 
@@ -207,40 +285,8 @@ public class H264PlayerActivity extends Activity   {
         mediaCodec.start();
 
     }
-    public static boolean isKeyFrame(byte[] nalu) {
-        if (nalu == null || nalu.length == 0) {
-            return false;
-        }
-        // 获取 NAL 单元类型（首字节低5位）
-        int nalType = nalu[0] & 0x1F;
-        return nalType == 5; // 5=IDR帧
-    }
-    public void callBytes(long cmd, byte[] data,long timestamp)  {
-        switch ((int) cmd){
-            case 1://data
-                try {
-                    boolean isKeyFrame=isKeyFrame(data);
-                    frameQueue.put(new H264Frame(data,  timestamp, isKeyFrame));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                break;
-            case 2://SPS
-                sps=data;
-                break;
-            case 3://PPS
-                pps=data;
-                break;
-        }
-        if(pps.length>0&&sps.length>0&&!isRunning){
-            try {
-                initMediaCodec(miniSurface.getHolder().getSurface());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            startDecoding();
-        }
-    }
+
+
 
     // 处理返回键（全屏时先退出全屏）
     @Override

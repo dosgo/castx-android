@@ -17,4 +17,5 @@
     <string name="chromeNoInstall">你没有安装edge或者chrome浏览器不能使用</string>
 
     <string name="scrcpyurl">scrcpy地址:</string>
+    <string name="wsUrl">ws Url:</string>
 </resources>

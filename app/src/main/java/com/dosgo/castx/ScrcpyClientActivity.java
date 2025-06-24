@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
@@ -58,9 +59,6 @@ public class ScrcpyClientActivity extends Activity   {
             }
             openView();
         });
-
-
-
 
         btnControl.setOnClickListener(v -> {
             if ( Status.scrcpyIsRunning) {
@@ -180,7 +178,13 @@ public class ScrcpyClientActivity extends Activity   {
 
 
     private void openView() {
+        SharedPreferences prefs = getSharedPreferences("config", Context.MODE_PRIVATE);
+        String password = prefs.getString("password", "");
+
         Intent intent = new Intent(this, H264PlayerActivity.class);
+        intent.putExtra("wsUrl", "ws://127.0.0.1:8082/ws");
+        intent.putExtra("isScrcpy", true);
+        intent.putExtra("password", password);
         startActivity(intent);
     }
 

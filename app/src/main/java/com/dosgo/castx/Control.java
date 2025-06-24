@@ -216,12 +216,6 @@ class Control   {
         }
     }
 
-    public static void dataCall(long cmd,byte[] param,long timestamp)  {
-        if(play!=null){
-            play.callBytes(cmd,param,timestamp);
-        }
-
-    }
 
 }
 

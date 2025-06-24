@@ -17,4 +17,5 @@
     <string name="scrcpyNotStarted">Scrcpy client not started</string>
     <string name="chromeNoInstall">You don\'t have Edge or Chrome installed so you can\'t use it</string>
     <string name="scrcpyurl">Scrcpy Url:</string>
+    <string name="wsUrl"> Ws Url:</string>
 </resources>
