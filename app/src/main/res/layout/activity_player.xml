@@ -19,8 +19,6 @@
                 android:id="@+id/btn_expand"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
                 android:layout_margin="8dp"
                 android:text="全屏"
                 />
@@ -28,8 +26,6 @@
                 android:id="@+id/play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
                 android:layout_margin="8dp"
                 android:text="接收"
                 />
@@ -54,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:textSize="18sp"
-                android:text="ws://127.0.0.1:8081/ws"
+                android:text="ws://172.20.131.147:8081/ws"
                 />
         </LinearLayout>
 
@@ -88,10 +84,11 @@
         <!-- 小窗播放器容器 -->
         <RelativeLayout
             android:id="@+id/mini_player_container"
-            android:layout_width="300dp"
-            android:layout_height="200dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
+            android:layout_margin="1dp"
             android:background="#33000000">
 
             <SurfaceView

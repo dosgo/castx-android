@@ -1,22 +1,19 @@
 package com.dosgo.castx;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.RadioGroup;
-
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity
         implements RadioGroup.OnCheckedChangeListener  {
 
     private Fragment castxFragment;
     private Fragment scrcpyClientFragment;
-    private Fragment h264PlayerFragment;
+
     private Fragment currentFragment;
     private RadioGroup tabBar;
 
@@ -28,7 +25,6 @@ public class MainActivity extends AppCompatActivity
         // 初始化Fragment实例
         castxFragment = new CastxFragment();
         scrcpyClientFragment = new ScrcpyClientFragment();
-        h264PlayerFragment = new H264PlayerFragment();
         currentFragment = castxFragment;
 
 
@@ -40,8 +36,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onCheckedChanged(RadioGroup group, int checkedId) {
-
-        System.out.println("onNavigationItemSelected:"+checkedId);
         if (checkedId  == R.id.castx_server && currentFragment != castxFragment) {
             loadFragment(castxFragment);
             currentFragment = castxFragment;
@@ -50,9 +44,9 @@ public class MainActivity extends AppCompatActivity
             loadFragment(scrcpyClientFragment);
             currentFragment = scrcpyClientFragment;
             return ;
-        } else if (checkedId == R.id.castx_client && currentFragment != h264PlayerFragment) {
-            loadFragment(h264PlayerFragment);
-            currentFragment = h264PlayerFragment;
+        } else if (checkedId == R.id.castx_client ) {
+            Intent intent = new Intent(this, H264PlayerActivity.class);
+            startActivity(intent);
             return ;
         }
         return ;
@@ -76,9 +70,7 @@ public class MainActivity extends AppCompatActivity
         if (scrcpyClientFragment != null && scrcpyClientFragment != fragment && scrcpyClientFragment.isAdded()) {
             transaction.hide(scrcpyClientFragment);
         }
-        if (h264PlayerFragment != null && h264PlayerFragment != fragment && h264PlayerFragment.isAdded()) {
-            transaction.hide(h264PlayerFragment);
-        }
+
 
         transaction.commit();
     }

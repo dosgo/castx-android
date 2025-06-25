@@ -97,6 +97,18 @@ public class ScrcpyClientFragment extends Fragment {
         });
     }
 
+    private void openView() {
+        SharedPreferences prefs = getActivity().getSharedPreferences("config", Context.MODE_PRIVATE);
+        String password = prefs.getString("password", "");
+
+        Intent intent = new Intent(getActivity(), H264PlayerActivity.class);
+        intent.putExtra("wsUrl", "ws://127.0.0.1:8082/ws");
+        intent.putExtra("isScrcpy", true);
+        intent.putExtra("password", password);
+        startActivity(intent);
+    }
+
+
     public void  getAllIpv4Addresses() {
 
         addrTxt="";
@@ -173,6 +185,7 @@ public class ScrcpyClientFragment extends Fragment {
             customTabsIntent.launchUrl(context, Uri.parse(url));
         } else{
             Toast.makeText(context, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
+            openView();
         }
     }
 

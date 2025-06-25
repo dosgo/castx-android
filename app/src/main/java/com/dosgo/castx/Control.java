@@ -19,7 +19,7 @@ class Control   {
 
     private static Context context;
 
-    private static H264PlayerFragment play;
+    private static H264PlayerActivity play;
 
     private static boolean regJavaObj;
 
@@ -204,7 +204,7 @@ class Control   {
         regJavaObj = false;
     }
 
-    public static void setActivity(H264PlayerFragment _play) {
+    public static void setActivity(H264PlayerActivity _play) {
         Control.play = _play;
         if(!regJavaObj) {
             regJavaObj = true;
