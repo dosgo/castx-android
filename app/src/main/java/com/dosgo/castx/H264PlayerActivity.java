@@ -148,7 +148,7 @@ public class H264PlayerActivity extends Activity {
             return ;
         }
         try {
-            String json = CastX.parseH264SPS(sps);
+            String json = CastX.parseH264SPS(sps,1);
 
             JSONObject jsonObject = new JSONObject(json);
             System.out.println("json:" + json);
