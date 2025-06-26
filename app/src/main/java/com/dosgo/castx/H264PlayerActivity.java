@@ -170,7 +170,7 @@ public class H264PlayerActivity extends Activity {
 
                 }
             }
-            format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4);
+         //   format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4);
 
             format.setByteBuffer("csd-0", ByteBuffer.wrap(sps));
             format.setByteBuffer("csd-1", ByteBuffer.wrap(pps));

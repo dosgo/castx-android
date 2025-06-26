@@ -1,0 +1,125 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 主内容区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- 其他UI元素 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:id="@+id/btn_expand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:text="全屏"
+                />
+            <Button
+                android:id="@+id/play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:text="接收"
+                />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/wsUrl"
+                android:singleLine="true"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/url"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textSize="18sp"
+                android:text="ws://172.20.131.147:8081/ws"
+                />
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/passwordve"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="@string/passwordlabel"
+                android:singleLine="true"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/et_password"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:textSize="18sp"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:hint="@string/passwordhint"
+                android:imeOptions="actionDone"/>
+        </LinearLayout>
+
+
+        <!-- 小窗播放器容器 -->
+        <RelativeLayout
+            android:id="@+id/mini_player_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="1dp"
+            android:background="#33000000">
+
+            <org.webrtc.SurfaceViewRenderer
+                android:id="@+id/remote_video_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+
+        </RelativeLayout>
+    </LinearLayout>
+
+    <!-- 全屏时的播放器（初始隐藏） -->
+    <FrameLayout
+        android:id="@+id/fullscreen_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@android:color/black">
+
+        <SurfaceView
+            android:id="@+id/fullscreen_surface"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <Button
+            android:id="@+id/btn_shrink"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="16dp"
+            android:text="退出全屏"
+          />
+    </FrameLayout>
+</FrameLayout>
