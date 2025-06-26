@@ -108,7 +108,7 @@
         android:visibility="gone"
         android:background="@android:color/black">
 
-        <SurfaceView
+        <org.webrtc.SurfaceViewRenderer
             android:id="@+id/fullscreen_surface"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>

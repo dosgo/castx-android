@@ -4,14 +4,19 @@ import android.app.Activity;
 
 import android.os.Bundle;
 
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Display;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import android.view.View;
 
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -47,7 +52,7 @@ public class WebrtcPlayerActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_webrtcPlayer);
+        setContentView(R.layout.activity_webrtc_player);
 
         miniContainer = findViewById(R.id.mini_player_container);
         fullscreenContainer = findViewById(R.id.fullscreen_container);
@@ -116,7 +121,7 @@ public class WebrtcPlayerActivity extends Activity {
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(
                 new ArrayList<>() // 不需要ICE服务器
         );
-        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAX_BUNDLE;
+        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
         configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
 
         peerConnection = factory.createPeerConnection(configuration, new PeerConnection.Observer() {
@@ -142,14 +147,51 @@ public class WebrtcPlayerActivity extends Activity {
 
             // 其他必要的回调（可以为空）
             @Override public void onIceCandidate(IceCandidate iceCandidate) {}
+
+            @Override
+            public void onIceCandidateError(IceCandidateErrorEvent event) {
+                PeerConnection.Observer.super.onIceCandidateError(event);
+            }
+
+            @Override
+            public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
+
+            }
+
+            @Override
+            public void onSelectedCandidatePairChanged(CandidatePairChangeEvent event) {
+                PeerConnection.Observer.super.onSelectedCandidatePairChanged(event);
+            }
+
             @Override public void onSignalingChange(PeerConnection.SignalingState signalingState) {}
             @Override public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {}
+
+            @Override
+            public void onStandardizedIceConnectionChange(PeerConnection.IceConnectionState newState) {
+                PeerConnection.Observer.super.onStandardizedIceConnectionChange(newState);
+            }
+
+            @Override
+            public void onConnectionChange(PeerConnection.PeerConnectionState newState) {
+                PeerConnection.Observer.super.onConnectionChange(newState);
+            }
+
             @Override public void onIceConnectionReceivingChange(boolean b) {}
             @Override public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {}
             @Override public void onRemoveStream(MediaStream mediaStream) {}
             @Override public void onDataChannel(DataChannel dataChannel) {}
             @Override public void onRenegotiationNeeded() {}
             @Override public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {}
+
+            @Override
+            public void onRemoveTrack(RtpReceiver receiver) {
+                PeerConnection.Observer.super.onRemoveTrack(receiver);
+            }
+
+            @Override
+            public void onTrack(RtpTransceiver transceiver) {
+                PeerConnection.Observer.super.onTrack(transceiver);
+            }
         });
 
         // 5. 设置远程媒体流描述
@@ -165,7 +207,7 @@ public class WebrtcPlayerActivity extends Activity {
 
     private void setRemoteDescription() {
         // 6. 接收到的远程SDP字符串
-        String remoteSdp = getRemoteSdp();
+        String remoteSdp = "";//getRemoteSdp();
 
         // 7. 创建远程会话描述
         SessionDescription remoteDesc = new SessionDescription(
@@ -174,20 +216,43 @@ public class WebrtcPlayerActivity extends Activity {
         );
 
         // 8. 设置远程描述
-        peerConnection.setRemoteDescription(new SimpleSdpObserver() {
+        peerConnection.setRemoteDescription(new SdpObserver() {
             @Override
             public void onSetSuccess() {
                 Log.d("WebRTCPlayer", "远程描述设置成功，准备接收流");
+                // 这里可以添加后续逻辑，例如：创建Answer等
             }
 
             @Override
             public void onSetFailure(String error) {
                 Log.e("WebRTCPlayer", "设置远程描述失败: " + error);
             }
+
+            @Override
+            public void onCreateSuccess(SessionDescription sessionDescription) {
+                // 创建SDP成功时调用（如createOffer/createAnswer），本例中不需要实现
+            }
+
+            @Override
+            public void onCreateFailure(String error) {
+                // 创建SDP失败时调用，本例中不需要实现
+            }
         }, remoteDesc);
     }
     private void play() {
-
+        String url= String.valueOf(urlEt.getText());
+        String password =String.valueOf(et_password.getText());
+        DisplayMetrics metrics = new DisplayMetrics();
+        WindowManager windowManager = (WindowManager) getSystemService(Activity.WINDOW_SERVICE);
+        Display display = windowManager.getDefaultDisplay();
+        display.getRealMetrics(metrics);
+        int maxSize=metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels;
+        System.out.println("play maxSize:"+maxSize);
+        long port=CastX.startCastXClient(url,password,maxSize);
+        if(port<1){
+            Toast.makeText(this, "connect err", Toast.LENGTH_SHORT).show();
+            return ;
+        }
     }
 
 
@@ -219,9 +284,6 @@ public class WebrtcPlayerActivity extends Activity {
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
     }
 
-    private void resetMediaCodecSurface(Surface surface) {
-        mediaCodec.setOutputSurface(surface);
-    }
 
     @Override
     protected void onResume() {

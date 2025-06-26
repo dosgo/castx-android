@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity
             currentFragment = scrcpyClientFragment;
             return ;
         } else if (checkedId == R.id.castx_client ) {
-            Intent intent = new Intent(this, H264PlayerActivity.class);
+            Intent intent = new Intent(this, WebrtcPlayerActivity.class);
             startActivity(intent);
             return ;
         }

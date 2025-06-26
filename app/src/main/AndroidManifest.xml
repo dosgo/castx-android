@@ -30,6 +30,12 @@
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
 
         </activity>
+        <activity
+            android:name=".WebrtcPlayerActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
+
+        </activity>
 
 
         <service
