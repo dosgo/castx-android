@@ -19,7 +19,7 @@ class Control   {
 
     private static Context context;
 
-    private static H264PlayerActivity play;
+    private static WebrtcPlayerActivity play;
 
     private static boolean regJavaObj;
 
@@ -204,11 +204,23 @@ class Control   {
         regJavaObj = false;
     }
 
-    public static void setActivity(H264PlayerActivity _play) {
+    public static void setActivity(WebrtcPlayerActivity _play) {
         Control.play = _play;
         if(!regJavaObj) {
             regJavaObj = true;
             CastX.regJavaClass(new CallInterface());
+        }
+    }
+
+    public static  void loginCall(String data){
+            if(play!=null){
+                play.loginCall(data);
+            }
+    }
+
+    public static  void offerRespCall(String data){
+        if(play!=null){
+            play.offerRespCall(data);
         }
     }
 

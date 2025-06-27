@@ -347,7 +347,7 @@ public class H264PlayerActivity extends Activity {
         display.getRealMetrics(metrics);
         int maxSize=metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels;
         System.out.println("play maxSize:"+maxSize);
-        long port=CastX.startCastXClient(url,password,maxSize);
+        long port=CastX.startCastXClient(url,password,maxSize,false);
         if(port<1){
             Toast.makeText(this, "connect err", Toast.LENGTH_SHORT).show();
             return ;

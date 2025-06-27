@@ -4,6 +4,8 @@ import org.json.JSONException;
 
 import castX.JavaCallbackInterface;
 public class CallInterface implements JavaCallbackInterface {
+
+    private static H264PlayerActivity play;
     public  void controlCall(String param) {
         try {
             System.out.println("callString param:"+param);
@@ -14,6 +16,15 @@ public class CallInterface implements JavaCallbackInterface {
         return ;
     }
 
+    @Override
+    public void loginCall(String s) {
+        Control.loginCall(s);
+    }
+
+    @Override
+    public void offerRespCall(String s) {
+        Control.offerRespCall(s);
+    }
 
 
     public  void webRtcConnectionStateChange(long count) {

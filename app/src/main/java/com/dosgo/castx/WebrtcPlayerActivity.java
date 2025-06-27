@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import org.json.JSONObject;
 import org.webrtc.*;
 import castX.CastX;
 
@@ -30,7 +31,7 @@ public class WebrtcPlayerActivity extends Activity {
     private boolean isFullscreen = false;
 
 
-    public SurfaceViewRenderer remoteVideoView ;
+
     private View miniContainer, fullscreenContainer;
 
     private EditText urlEt,et_password;
@@ -57,7 +58,7 @@ public class WebrtcPlayerActivity extends Activity {
         miniContainer = findViewById(R.id.mini_player_container);
         fullscreenContainer = findViewById(R.id.fullscreen_container);
 
-        remoteVideoView= findViewById(R.id.remote_video_view);
+        videoRenderer= findViewById(R.id.remote_video_view);
         // 设置全屏/小窗切换按钮
         findViewById(R.id.btn_expand).setOnClickListener(v -> enterFullscreen());
         findViewById(R.id.btn_shrink).setOnClickListener(v -> exitFullscreen());
@@ -80,19 +81,19 @@ public class WebrtcPlayerActivity extends Activity {
         passwordve=findViewById(R.id.passwordve);
 
 
-            isScrcpy = getIntent().getBooleanExtra("isScrcpy",false);
-            if (isScrcpy) {
-                String wsUrl = getIntent().getStringExtra("wsUrl");
-                String password = getIntent().getStringExtra("password");
-                urlEt.setText(wsUrl);
-                urlEt.setEnabled(false);
-                et_password.setText(password);
-                passwordve.setVisibility(View.GONE);
-            } else {
-                urlEt.setEnabled(true);
-                passwordve.setVisibility(View.VISIBLE);
-            }
-
+        isScrcpy = getIntent().getBooleanExtra("isScrcpy",false);
+        if (isScrcpy) {
+            String wsUrl = getIntent().getStringExtra("wsUrl");
+            String password = getIntent().getStringExtra("password");
+            urlEt.setText(wsUrl);
+            urlEt.setEnabled(false);
+            et_password.setText(password);
+            passwordve.setVisibility(View.GONE);
+        } else {
+            urlEt.setEnabled(true);
+            passwordve.setVisibility(View.VISIBLE);
+        }
+        Control.setActivity(this);
     }
 
 
@@ -107,7 +108,14 @@ public class WebrtcPlayerActivity extends Activity {
     private void initializeWebRTC() {
         // 创建EGL上下文
         eglBase = EglBase.create();
-        videoRenderer.init(eglBase.getEglBaseContext(), null);
+        runOnUiThread(() -> {
+            try {
+                videoRenderer.init(eglBase.getEglBaseContext(), null);
+                Log.d("WebRTC", "SurfaceViewRenderer 初始化成功");
+            } catch (Exception e) {
+                Log.e("WebRTC", "初始化失败", e);
+            }
+        });
 
         // 初始化PeerConnectionFactory
         PeerConnectionFactory.InitializationOptions options =
@@ -121,8 +129,12 @@ public class WebrtcPlayerActivity extends Activity {
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(
                 new ArrayList<>() // 不需要ICE服务器
         );
-        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
-        configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+
+
+
+        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXCOMPAT; // 关键！
+     //   configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+      //  configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
         peerConnection = factory.createPeerConnection(configuration, new PeerConnection.Observer() {
             @Override
@@ -177,7 +189,25 @@ public class WebrtcPlayerActivity extends Activity {
             }
 
             @Override public void onIceConnectionReceivingChange(boolean b) {}
-            @Override public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {}
+            @Override public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
+
+                if (iceGatheringState == PeerConnection.IceGatheringState.GATHERING) {
+                    Log.d("webrtc", "开始收集 ICE 候选");
+                } else if (iceGatheringState == PeerConnection.IceGatheringState.COMPLETE) {
+
+                    try {
+                      SessionDescription  offer= peerConnection.getLocalDescription();
+                        JSONObject json = new JSONObject();
+                        json.put("type", offer.type.canonicalForm());
+                        json.put("sdp", offer.description);
+
+                        CastX.castXClientSendOffer(json.toString());
+                    } catch (Exception e){
+                        e.printStackTrace();
+
+                    }
+                }
+            }
             @Override public void onRemoveStream(MediaStream mediaStream) {}
             @Override public void onDataChannel(DataChannel dataChannel) {}
             @Override public void onRenegotiationNeeded() {}
@@ -194,8 +224,50 @@ public class WebrtcPlayerActivity extends Activity {
             }
         });
 
-        // 5. 设置远程媒体流描述
-        setRemoteDescription();
+        RtpTransceiver videoTransceiver = peerConnection.addTransceiver(
+                MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO
+        );
+      //  videoTransceiver.setDirection(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY);
+
+        // 添加音频接收器
+        RtpTransceiver audioTransceiver = peerConnection.addTransceiver(
+                MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO
+        );
+        //audioTransceiver.setDirection(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY);
+
+
+        // 1. 开始收集 ICE 候选 (自动触发)
+        peerConnection.createOffer(new SdpObserver() {
+            @Override
+            public void onCreateSuccess(SessionDescription offer) {
+                // 2. 创建 Offer 成功
+
+                // 3. 设置本地描述
+                peerConnection.setLocalDescription(new SdpObserver() {
+                    @Override
+                    public void onSetSuccess() {
+
+                    }
+                    @Override
+                    public void onSetFailure(String error) {
+                        Log.e("WebRTC", "设置本地描述失败: " + error);
+                    }
+
+                    // 其他回调
+                    @Override public void onCreateSuccess(SessionDescription sessionDescription) {}
+                    @Override public void onCreateFailure(String s) {}
+                }, offer);
+            }
+
+            @Override
+            public void onCreateFailure(String error) {
+                Log.e("WebRTC", "创建 Offer 失败: " + error);
+            }
+
+            // 其他回调
+            @Override public void onSetSuccess() {}
+            @Override public void onSetFailure(String s) {}
+        }, new MediaConstraints());
     }
     /**
      * 在实际应用中，您需要通过网络从对等端接收ICE候选信息
@@ -205,9 +277,34 @@ public class WebrtcPlayerActivity extends Activity {
         peerConnection.addIceCandidate(iceCandidate);
     }
 
-    private void setRemoteDescription() {
-        // 6. 接收到的远程SDP字符串
-        String remoteSdp = "";//getRemoteSdp();
+
+    public void loginCall(String data){
+        System.out.println("loginCall data:"+data);
+        try {
+            JSONObject json = new JSONObject(data);
+            boolean auth = json.getBoolean("auth");
+            if(auth){
+                initializeWebRTC();
+            }else{
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(WebrtcPlayerActivity.this, "login err", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void offerRespCall(String data){
+        System.out.println("offerRespCall data:"+data);
+        // 5. 设置远程媒体流描述
+        setRemoteDescription(data);
+    }
+
+    private void setRemoteDescription(String remoteSdp ) {
 
         // 7. 创建远程会话描述
         SessionDescription remoteDesc = new SessionDescription(
@@ -248,11 +345,8 @@ public class WebrtcPlayerActivity extends Activity {
         display.getRealMetrics(metrics);
         int maxSize=metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels;
         System.out.println("play maxSize:"+maxSize);
-        long port=CastX.startCastXClient(url,password,maxSize);
-        if(port<1){
-            Toast.makeText(this, "connect err", Toast.LENGTH_SHORT).show();
-            return ;
-        }
+        CastX.startCastXClient(url,password,maxSize,false);
+
     }
 
 
