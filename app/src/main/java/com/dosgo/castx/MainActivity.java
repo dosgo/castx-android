@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity
             currentFragment = scrcpyClientFragment;
             return ;
         } else if (checkedId == R.id.castx_client ) {
-            Intent intent = new Intent(this, WebrtcPlayerActivity.class);
+            Intent intent = new Intent(this, RtspPlayerActivity.class);
             startActivity(intent);
             return ;
         }

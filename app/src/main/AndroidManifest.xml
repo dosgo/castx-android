@@ -36,6 +36,12 @@
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
 
         </activity>
+        <activity
+            android:name=".RtspPlayerActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
+
+        </activity>
 
 
         <service
