@@ -271,11 +271,7 @@ public class VideoEncoder {
 
         buffer.put(pps);
 
-       System.out.println("h264 pps length:"+buffer.limit());
         scrcpySender.writeFrame(buffer,info.presentationTimeUs,false,false);
-        System.out.println("h264 pps:"+java.util.stream.IntStream.range(0, buffer.limit())
-                .mapToObj(i -> String.format("%02X", buffer.get(i)))
-                .collect(java.util.stream.Collectors.joining(" ")));
 
     }
 
