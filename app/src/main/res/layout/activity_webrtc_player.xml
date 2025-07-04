@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:textSize="18sp"
-                android:text="ws://172.20.131.147:8081/ws"
+                android:text="ws://192.168.189.134:8081/ws"
                 />
         </LinearLayout>
 

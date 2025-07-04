@@ -45,7 +45,7 @@ public class WebrtcPlayerActivity extends Activity {
 
     private PeerConnectionFactory factory;
     private PeerConnection peerConnection;
-    private SurfaceViewRenderer videoRenderer;
+    private SurfaceViewRenderer videoRenderer,fullRenderer;
     private EglBase eglBase;
 
 
@@ -60,6 +60,7 @@ public class WebrtcPlayerActivity extends Activity {
         fullscreenContainer = findViewById(R.id.fullscreen_container);
 
         videoRenderer= findViewById(R.id.remote_video_view);
+        fullRenderer=findViewById(R.id.fullscreen_surface);
         // 设置全屏/小窗切换按钮
         findViewById(R.id.btn_expand).setOnClickListener(v -> enterFullscreen());
         findViewById(R.id.btn_shrink).setOnClickListener(v -> exitFullscreen());
@@ -73,6 +74,7 @@ public class WebrtcPlayerActivity extends Activity {
                         CastX.shutdownWsClient();
 
                         play.setText("接收");
+                        isRunning=false;
                     }
                 }
         );
@@ -108,15 +110,19 @@ public class WebrtcPlayerActivity extends Activity {
 
     private void initializeWebRTC() {
         // 创建EGL上下文
-        eglBase = EglBase.create();
-        runOnUiThread(() -> {
-            try {
-                videoRenderer.init(eglBase.getEglBaseContext(), null);
-                Log.d("WebRTC", "SurfaceViewRenderer 初始化成功");
-            } catch (Exception e) {
-                Log.e("WebRTC", "初始化失败", e);
-            }
-        });
+        if(eglBase==null) {
+            eglBase = EglBase.create();
+            runOnUiThread(() -> {
+                try {
+                    videoRenderer.init(eglBase.getEglBaseContext(), null);
+
+                    //   fullRenderer.init(eglBase.getEglBaseContext(), null);
+                    Log.d("WebRTC", "SurfaceViewRenderer 初始化成功");
+                } catch (Exception e) {
+                    Log.e("WebRTC", "初始化失败", e);
+                }
+            });
+        }
 
         // 初始化PeerConnectionFactory
         PeerConnectionFactory.InitializationOptions options =
@@ -353,7 +359,7 @@ public class WebrtcPlayerActivity extends Activity {
         int maxSize=metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels;
         System.out.println("play maxSize:"+maxSize);
         CastX.startWsClient(url,password,maxSize);
-
+        isRunning=true;
     }
 
 
