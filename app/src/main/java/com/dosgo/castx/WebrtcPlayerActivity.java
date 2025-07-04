@@ -70,7 +70,7 @@ public class WebrtcPlayerActivity extends Activity {
                         play();
                         play.setText("停止");
                     } else {
-                        CastX.shutdownCastXClient();
+                        CastX.shutdownWsClient();
 
                         play.setText("接收");
                     }
@@ -198,7 +198,7 @@ public class WebrtcPlayerActivity extends Activity {
                         json.put("type", offer.type.canonicalForm());
                         json.put("sdp", offer.description);
 
-                        CastX.castXClientSendOffer(json.toString());
+                        CastX.wsClientSendOffer(json.toString());
                     } catch (Exception e){
                         e.printStackTrace();
 
@@ -352,7 +352,7 @@ public class WebrtcPlayerActivity extends Activity {
         display.getRealMetrics(metrics);
         int maxSize=metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels;
         System.out.println("play maxSize:"+maxSize);
-        CastX.startCastXClient(url,password,maxSize,false);
+        CastX.startWsClient(url,password,maxSize);
 
     }
 
