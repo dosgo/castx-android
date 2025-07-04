@@ -101,7 +101,7 @@ public class ScrcpyClientFragment extends Fragment {
         SharedPreferences prefs = getActivity().getSharedPreferences("config", Context.MODE_PRIVATE);
         String password = prefs.getString("password", "");
 
-        Intent intent = new Intent(getActivity(), H264PlayerActivity.class);
+        Intent intent = new Intent(getActivity(), WebrtcPlayerActivity.class);
         intent.putExtra("wsUrl", "ws://127.0.0.1:8082/ws");
         intent.putExtra("isScrcpy", true);
         intent.putExtra("password", password);

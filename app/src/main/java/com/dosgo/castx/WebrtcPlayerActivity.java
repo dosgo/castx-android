@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.*;
 import castX.CastX;
@@ -123,18 +124,14 @@ public class WebrtcPlayerActivity extends Activity {
                         .createInitializationOptions();
         PeerConnectionFactory.initialize(options);
 
-        factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+        DefaultVideoDecoderFactory decoderFactory = new DefaultVideoDecoderFactory(eglBase.getEglBaseContext());
+
+        factory = PeerConnectionFactory.builder().setVideoDecoderFactory(decoderFactory).createPeerConnectionFactory();
 
         // 3. 创建PeerConnection
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(
                 new ArrayList<>() // 不需要ICE服务器
         );
-
-
-
-        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXCOMPAT; // 关键！
-     //   configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
-      //  configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
         peerConnection = factory.createPeerConnection(configuration, new PeerConnection.Observer() {
             @Override
@@ -227,13 +224,13 @@ public class WebrtcPlayerActivity extends Activity {
         RtpTransceiver videoTransceiver = peerConnection.addTransceiver(
                 MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO
         );
-      //  videoTransceiver.setDirection(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY);
+        videoTransceiver.setDirection(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY);
 
         // 添加音频接收器
         RtpTransceiver audioTransceiver = peerConnection.addTransceiver(
                 MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO
         );
-        //audioTransceiver.setDirection(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY);
+        audioTransceiver.setDirection(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY);
 
 
         // 1. 开始收集 ICE 候选 (自动触发)
@@ -301,15 +298,25 @@ public class WebrtcPlayerActivity extends Activity {
     public void offerRespCall(String data){
         System.out.println("offerRespCall data:"+data);
         // 5. 设置远程媒体流描述
-        setRemoteDescription(data);
+        try {
+            setRemoteDescription(data);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private void setRemoteDescription(String remoteSdp ) {
+    private void setRemoteDescription(String remoteSdp ) throws JSONException {
 
+        JSONObject json = new JSONObject(remoteSdp);
+        String sdpStr = json.getString("sdp");
+
+        JSONObject sdpJson = new JSONObject(sdpStr);
+
+        String sdp=sdpJson.getString("sdp");
         // 7. 创建远程会话描述
         SessionDescription remoteDesc = new SessionDescription(
                 SessionDescription.Type.ANSWER, // 或者OFFER，取决于角色
-                remoteSdp
+                sdp
         );
 
         // 8. 设置远程描述

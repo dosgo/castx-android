@@ -24,24 +24,14 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".H264PlayerActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
 
-        </activity>
         <activity
             android:name=".WebrtcPlayerActivity"
             android:exported="true"
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
 
         </activity>
-        <activity
-            android:name=".RtspPlayerActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
 
-        </activity>
 
 
         <service

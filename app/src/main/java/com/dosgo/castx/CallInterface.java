@@ -5,7 +5,6 @@ import org.json.JSONException;
 import castX.JavaCallbackInterface;
 public class CallInterface implements JavaCallbackInterface {
 
-    private static H264PlayerActivity play;
     public  void controlCall(String param) {
         try {
             System.out.println("callString param:"+param);
