@@ -102,7 +102,7 @@ public class ScrcpyClientFragment extends Fragment {
         String password = prefs.getString("password", "");
 
         Intent intent = new Intent(getActivity(), WebrtcPlayerActivity.class);
-        intent.putExtra("wsUrl", "ws://127.0.0.1:8082/ws");
+        intent.putExtra("url", "http://127.0.0.1:8082/");
         intent.putExtra("isScrcpy", true);
         intent.putExtra("password", password);
         startActivity(intent);

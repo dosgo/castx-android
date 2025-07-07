@@ -19,5 +19,5 @@
     <string name="scrcpyClient">Scrcpy客户端</string>
     <string name="castxClient">接收投屏</string>
     <string name="scrcpyurl">scrcpy地址:</string>
-    <string name="wsUrl">ws Url:</string>
+    <string name="urlErrMsg">投屏地址不正确</string>
 </resources>

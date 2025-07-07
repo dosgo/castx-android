@@ -15,20 +15,21 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             >
-            <Button
-                android:id="@+id/btn_expand"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:text="全屏"
-                />
-            <Button
+            <ImageButton
                 android:id="@+id/play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:text="接收"
+                android:src="@android:drawable/ic_media_play"
                 />
+            <ImageButton
+                android:id="@+id/btn_expand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:src="@drawable/fullscreen_24px"
+                />
+
         </LinearLayout>
 
 
@@ -40,7 +41,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/wsUrl"
+                android:text="@string/url"
                 android:singleLine="true"
                 android:textSize="18sp" />
 
@@ -50,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:textSize="18sp"
-                android:text="ws://192.168.189.134:8081/ws"
+                android:text=""
                 />
         </LinearLayout>
 
@@ -87,15 +88,12 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="1dp"
             android:background="#33000000">
 
             <org.webrtc.SurfaceViewRenderer
                 android:id="@+id/remote_video_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
 
         </RelativeLayout>
     </LinearLayout>
@@ -110,16 +108,34 @@
 
         <org.webrtc.SurfaceViewRenderer
             android:id="@+id/fullscreen_surface"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
-        <Button
-            android:id="@+id/btn_shrink"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="top|end"
-            android:layout_margin="16dp"
-            android:text="退出全屏"
-          />
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <!-- 主页按钮 -->
+            <ImageButton
+                android:id="@+id/home"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/home_24px"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- 退出全屏按钮 -->
+            <ImageButton
+                android:id="@+id/btn_shrink"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/fullscreen_exit_24px"/>
+        </LinearLayout>
+
+
+
     </FrameLayout>
 </FrameLayout>

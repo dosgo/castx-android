@@ -2,11 +2,17 @@ package com.dosgo.castx;
 
 import android.app.Activity;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -15,9 +21,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import org.json.JSONException;
@@ -39,7 +48,7 @@ public class WebrtcPlayerActivity extends Activity {
 
     private  LinearLayout   passwordve;
 
-    private Button play;
+    private ImageButton play;
 
     private  boolean isScrcpy;
 
@@ -47,7 +56,7 @@ public class WebrtcPlayerActivity extends Activity {
     private PeerConnection peerConnection;
     private SurfaceViewRenderer videoRenderer,fullRenderer;
     private EglBase eglBase;
-
+    private  VideoTrack videoTrack;
 
 
 
@@ -60,35 +69,85 @@ public class WebrtcPlayerActivity extends Activity {
         fullscreenContainer = findViewById(R.id.fullscreen_container);
 
         videoRenderer= findViewById(R.id.remote_video_view);
+        videoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+        videoRenderer.setEnableHardwareScaler(true);
+        videoRenderer.setOnTouchListener(touchHandler);
+
+
         fullRenderer=findViewById(R.id.fullscreen_surface);
+        fullRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+        fullRenderer.setEnableHardwareScaler(true);
+        fullRenderer.setOnTouchListener(touchHandler);
         // 设置全屏/小窗切换按钮
         findViewById(R.id.btn_expand).setOnClickListener(v -> enterFullscreen());
         findViewById(R.id.btn_shrink).setOnClickListener(v -> exitFullscreen());
+
+        findViewById(R.id.home).setOnClickListener(v -> {
+            try {
+                JSONObject json = new JSONObject();
+                json.put("type", "keyboard");
+                json.put("code", "home");
+                CastX.wsClientSendControl(json.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        });
 
         play=findViewById(R.id.play);
         play.setOnClickListener(v -> {
                     if (!isRunning) {
                         play();
-                        play.setText("停止");
+                        play.setImageResource(android.R.drawable.ic_media_pause);
+
                     } else {
                         CastX.shutdownWsClient();
-
-                        play.setText("接收");
                         isRunning=false;
+                        play.setImageResource(android.R.drawable.ic_media_play);
                     }
                 }
         );
 
         urlEt=findViewById(R.id.url);
+
+        urlEt.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 当文本改变后自动保存密码
+                saveConf("receiveUrl",s.toString());
+            }
+        });
         et_password=findViewById(R.id.et_password);
+
+        et_password.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 当文本改变后自动保存密码
+                saveConf("receivePassword",s.toString());
+            }
+        });
+        loadConf();
         passwordve=findViewById(R.id.passwordve);
+
+
 
 
         isScrcpy = getIntent().getBooleanExtra("isScrcpy",false);
         if (isScrcpy) {
-            String wsUrl = getIntent().getStringExtra("wsUrl");
+            String url = getIntent().getStringExtra("url");
             String password = getIntent().getStringExtra("password");
-            urlEt.setText(wsUrl);
+            urlEt.setText(url);
             urlEt.setEnabled(false);
             et_password.setText(password);
             passwordve.setVisibility(View.GONE);
@@ -102,7 +161,7 @@ public class WebrtcPlayerActivity extends Activity {
 
     private void updateStartUI(){
         if (play!=null){
-            play.setText(isRunning? "停止":"接收");
+            play.setImageResource(isRunning?android.R.drawable.ic_media_pause:android.R.drawable.ic_media_play);
         }
     }
 
@@ -116,7 +175,7 @@ public class WebrtcPlayerActivity extends Activity {
                 try {
                     videoRenderer.init(eglBase.getEglBaseContext(), null);
 
-                    //   fullRenderer.init(eglBase.getEglBaseContext(), null);
+                       fullRenderer.init(eglBase.getEglBaseContext(), null);
                     Log.d("WebRTC", "SurfaceViewRenderer 初始化成功");
                 } catch (Exception e) {
                     Log.e("WebRTC", "初始化失败", e);
@@ -146,8 +205,10 @@ public class WebrtcPlayerActivity extends Activity {
                 runOnUiThread(() -> {
                     // 播放视频
                     if (!stream.videoTracks.isEmpty()) {
-                        VideoTrack videoTrack = stream.videoTracks.get(0);
+                         videoTrack = stream.videoTracks.get(0);
                         videoTrack.addSink(videoRenderer);
+                        videoTrack.addSink(fullRenderer);
+                        //videoRenderer.setRotation(180f);
                         Log.d("WebRTCPlayer", "开始播放视频");
                     }
 
@@ -350,16 +411,23 @@ public class WebrtcPlayerActivity extends Activity {
         }, remoteDesc);
     }
     private void play() {
-        String url= String.valueOf(urlEt.getText());
-        String password =String.valueOf(et_password.getText());
-        DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager windowManager = (WindowManager) getSystemService(Activity.WINDOW_SERVICE);
-        Display display = windowManager.getDefaultDisplay();
-        display.getRealMetrics(metrics);
-        int maxSize=metrics.widthPixels>metrics.heightPixels?metrics.widthPixels:metrics.heightPixels;
-        System.out.println("play maxSize:"+maxSize);
-        CastX.startWsClient(url,password,maxSize);
-        isRunning=true;
+        try {
+            String url = String.valueOf(urlEt.getText());
+            URI uri = new URI(url);
+            String wsUrl = (uri.getScheme().equals("http")?"ws":"wss")+ "://" + uri.getHost() +  (uri.getPort()!=-1?(":"+uri.getPort()):"") + "/ws";
+            String password = String.valueOf(et_password.getText());
+            DisplayMetrics metrics = new DisplayMetrics();
+            WindowManager windowManager = (WindowManager) getSystemService(Activity.WINDOW_SERVICE);
+            Display display = windowManager.getDefaultDisplay();
+            display.getRealMetrics(metrics);
+            int maxSize = metrics.widthPixels > metrics.heightPixels ? metrics.widthPixels : metrics.heightPixels;
+            System.out.println("play maxSize:" + maxSize);
+            System.out.println("wsUrl:" + wsUrl+"uri.getScheme():"+uri.getScheme());
+            CastX.startWsClient(wsUrl, password, maxSize);
+            isRunning = true;
+        }catch (URISyntaxException e){
+            Toast.makeText(this, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
+        }
     }
 
 
@@ -371,14 +439,12 @@ public class WebrtcPlayerActivity extends Activity {
 
         // 2. 显示全屏容器
         fullscreenContainer.setVisibility(View.VISIBLE);
-
-
-
         // 4. 隐藏状态栏和导航栏
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
 
     private void exitFullscreen() {
@@ -387,8 +453,27 @@ public class WebrtcPlayerActivity extends Activity {
         miniContainer.setVisibility(View.VISIBLE);
         // 2. 隐藏全屏容器
         fullscreenContainer.setVisibility(View.GONE);
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         // 4. 恢复系统UI
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+    }
+
+
+    // 保存密码到SharedPreferences
+    private void saveConf(String key,String value) {
+        SharedPreferences prefs =getSharedPreferences("config", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(key, value);
+        editor.apply();
+    }
+
+    // 从SharedPreferences加载已保存的密码
+    private void loadConf() {
+        SharedPreferences prefs = getSharedPreferences("config", Context.MODE_PRIVATE);
+        String savedPassword = prefs.getString("receivePassword", "");
+        String wsUrl = prefs.getString("receiveUrl", "");
+        urlEt.setText(wsUrl);
+        et_password.setText(savedPassword);
     }
 
 
@@ -416,5 +501,85 @@ public class WebrtcPlayerActivity extends Activity {
             factory.dispose();
         }
     }
+
+
+    View.OnTouchListener touchHandler =  new View.OnTouchListener() {
+        private long downTime;
+        private float downX, downY;
+        private float startX,startY;
+        long duration=0;
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            String type="";
+             downX = 0;
+             downY=0;
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                        downTime = System.currentTimeMillis();
+                        downX = event.getX();
+                        downY = event.getY();
+                        type="panstart";
+                        System.out.println("panstart");
+                        startX=downX;
+                        startY=downY;
+                        break;
+                case MotionEvent.ACTION_MOVE:
+
+                        downX = event.getX();
+                        downY = event.getY();
+                        type="pan";
+                    System.out.println("pan");
+                        break;
+
+                case MotionEvent.ACTION_UP:
+                        downX = event.getX();
+                        downY = event.getY();
+
+                        float touchNum=10;//小于10像素是点击
+                         type="panend";
+                        System.out.println("panend");
+                        if(Math.abs(downX-startX)  < touchNum&&  Math.abs(downY  -startY ) < touchNum  ){
+
+                            startX=0;
+                            startY=0;
+                            duration =System.currentTimeMillis() - downTime;
+                            if(duration<20){
+                                duration=20;
+                            }
+                            downTime=0;
+                            type="click";
+                            if(duration>400){
+                                type="rightClick";
+                            }
+                        }
+
+                    break;
+            }
+            if(type.length()>0){
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("type", type);
+                    json.put("x", downX);
+                    json.put("y", downY);
+
+                    int width = videoRenderer.getWidth();
+                    int height = videoRenderer.getHeight();
+                    if (isFullscreen) {
+                        width = fullRenderer.getWidth();
+                        height = fullRenderer.getHeight();
+                    }
+
+                    json.put("videoWidth", width);
+                    json.put("videoHeight", height);
+                    json.put("'duration'", duration);
+                    CastX.wsClientSendControl(json.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            return true;
+        }
+    };
 
 }
