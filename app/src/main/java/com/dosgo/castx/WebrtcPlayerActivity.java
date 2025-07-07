@@ -184,14 +184,19 @@ public class WebrtcPlayerActivity extends Activity {
         }
 
         // 初始化PeerConnectionFactory
+
         PeerConnectionFactory.InitializationOptions options =
                 PeerConnectionFactory.InitializationOptions.builder(this)
                         .createInitializationOptions();
+
         PeerConnectionFactory.initialize(options);
 
         DefaultVideoDecoderFactory decoderFactory = new DefaultVideoDecoderFactory(eglBase.getEglBaseContext());
 
-        factory = PeerConnectionFactory.builder().setVideoDecoderFactory(decoderFactory).createPeerConnectionFactory();
+        PeerConnectionFactory.Options options1 = new PeerConnectionFactory.Options();
+        options1.disableNetworkMonitor = true;
+
+        factory = PeerConnectionFactory.builder().setOptions(options1).setVideoDecoderFactory(decoderFactory).createPeerConnectionFactory();
 
         // 3. 创建PeerConnection
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(
