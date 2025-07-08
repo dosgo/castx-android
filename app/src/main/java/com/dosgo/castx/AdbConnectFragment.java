@@ -1,0 +1,230 @@
+package com.dosgo.castx;
+
+
+import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
+import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Toast;
+
+
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import castX.CastX;
+
+
+public class AdbConnectFragment extends Fragment {
+
+    private UsbManager usbManager;
+    private static final int REQUEST_USB_PERMISSION = 1;
+    private static final String ACTION_USB_PERMISSION = "com.castx.USB_PERMISSION";
+    private  View view;
+    private EditText ipEt,authPort,etAuthCode,etConectPort;
+
+    @Override
+    public void onCreate( Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 通过Activity获取USB管理器
+        usbManager = (UsbManager) requireActivity().getSystemService(Context.USB_SERVICE);
+
+        usbManager.getDeviceList();
+    }
+
+    @Override
+    public View onCreateView( LayoutInflater inflater,
+                              ViewGroup container,
+                              Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.adb_connect, container, false);
+    }
+
+
+    @Override
+    public void onViewCreated( View _view,  Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        view=_view;
+        _view.findViewById(R.id.tab_wifi).setOnClickListener(tab);
+        _view.findViewById(R.id.tab_usb).setOnClickListener(tab);
+        ipEt= _view.findViewById(R.id.ipEt);
+        authPort=_view.findViewById(R.id.authPort);
+        etAuthCode=_view.findViewById(R.id.etAuthCode);
+        etConectPort=_view.findViewById(R.id.etConectPort);
+        view.findViewById(R.id.btnPair).setOnClickListener(v -> {
+                System.out.println("btnPair\r\n");
+                try {
+                    WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
+                    Display display = windowManager.getDefaultDisplay();
+                    DisplayMetrics metrics = new DisplayMetrics();
+                    display.getRealMetrics(metrics);
+                    int maxSize = metrics.widthPixels > metrics.heightPixels ? metrics.widthPixels : metrics.heightPixels;
+
+                    JSONObject json = new JSONObject();
+                    json.put("adbType", "pair");
+                    json.put("max_size", maxSize);
+                    json.put("address",  ipEt.getText());
+                    json.put("authPort", authPort.getText());
+                    json.put("authCode", etAuthCode.getText());
+                   // json.put("connectPort", "home");
+
+                    CastX.wsClientConnectAdb(json.toString());
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        );
+        view.findViewById(R.id.btnConnect).setOnClickListener(v -> {
+            try {
+                WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
+                Display display = windowManager.getDefaultDisplay();
+                DisplayMetrics metrics = new DisplayMetrics();
+                display.getRealMetrics(metrics);
+                int maxSize = metrics.widthPixels > metrics.heightPixels ? metrics.widthPixels : metrics.heightPixels;
+
+                JSONObject json = new JSONObject();
+                json.put("adbType", "connect");
+                json.put("max_size", maxSize);
+                json.put("address",  ipEt.getText());
+                json.put("connectPort", etConectPort.getText());
+
+                CastX.wsClientConnectAdb(json.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+        });
+
+    }
+
+
+
+
+
+
+    @Override
+    public  void onPause() {
+        super.onPause();
+
+    }
+    // 更新显示数值
+
+    private void updateStartUI(){
+
+    }
+
+    View.OnClickListener tab=new View.OnClickListener(){
+
+        @Override
+        public void onClick(View v) {
+            if( v.getId()==R.id.tab_wifi&&  view!=null){
+                v.setBackgroundColor( Color.parseColor("#2196F3"));
+                view.findViewById(R.id.tab_usb).setBackgroundColor( Color.parseColor("#F5F5F5"));
+                view.findViewById(R.id.wifiView).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.usbView).setVisibility(View.GONE);
+            }
+            if( v.getId()==R.id.tab_usb&&  view!=null){
+                v.setBackgroundColor( Color.parseColor("#2196F3"));
+                view.findViewById(R.id.tab_wifi).setBackgroundColor( Color.parseColor("#F5F5F5"));
+                view.findViewById(R.id.wifiView).setVisibility(View.GONE);
+                view.findViewById(R.id.usbView).setVisibility(View.VISIBLE);
+                findAndClaimTargetDevice(getActivity());
+            }
+        }
+    };
+    private void requestUsbPermission(UsbDevice device) {
+        // 创建权限请求意图
+        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+
+        // 注册广播接收器
+        BroadcastReceiver permissionReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (ACTION_USB_PERMISSION.equals(action)) {
+                    synchronized (this) {
+                        UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                        if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                            if (device != null) {
+                                // 权限已授予，操作设备
+                                onUsbPermissionGranted(device);
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "USB权限被拒绝", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    // 注销接收器
+                    requireActivity().unregisterReceiver(this);
+                }
+            }
+        };
+
+        // 注册广播接收器
+        ContextCompat.registerReceiver(requireActivity(), permissionReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+
+        // 创建PendingIntent
+        Intent permissionIntent = new Intent(ACTION_USB_PERMISSION);
+        // 使用FLAG_MUTABLE以适配Android 12+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                requireContext(),
+                0,
+                permissionIntent,
+                PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // 请求权限
+        usbManager.requestPermission(device, pendingIntent);
+    }
+
+    private void onUsbPermissionGranted(UsbDevice device) {
+        // 处理已获得权限的设备
+        Toast.makeText(getContext(), "获得设备访问权限: " + device.getDeviceName(), Toast.LENGTH_SHORT).show();
+    }
+
+    public  void findAndClaimTargetDevice(Context context) {
+        UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+        if (usbManager == null) {
+            return;
+        }
+
+        // 获取所有已连接的USB设备
+        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
+        List<UsbItemAdapter.UsbItem> items = new ArrayList<>();
+        for (Map.Entry<String, UsbDevice> entry : deviceList.entrySet()) {
+            UsbDevice device = entry.getValue();
+            items.add( new UsbItemAdapter.UsbItem(device.getDeviceName(),device));
+        }
+
+        // 设置适配器
+        UsbItemAdapter adapter = new UsbItemAdapter(getActivity(), items);
+        ListView listView = view.findViewById(R.id.usbList);
+        listView.setAdapter(adapter);
+
+        // 设置列表项点击事件
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            UsbItemAdapter.UsbItem item = items.get(position);
+          //  Toast.makeText(this, "选择了: " + item, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+}

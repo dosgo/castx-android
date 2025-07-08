@@ -25,6 +25,12 @@ public class CallInterface implements JavaCallbackInterface {
         Control.offerRespCall(s);
     }
 
+    @Override
+    public void infoNotifyCall(String s) {
+        Control.infoNotifyCall(s);
+    }
+
+
 
     public  void webRtcConnectionStateChange(long count) {
         if(count<1){

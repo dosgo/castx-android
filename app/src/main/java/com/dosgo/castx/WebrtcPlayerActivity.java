@@ -2,28 +2,34 @@ package com.dosgo.castx;
 
 import android.app.Activity;
 
+import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Rational;
 import android.view.Display;
 import android.view.MotionEvent;
-import android.view.Surface;
-import android.view.SurfaceHolder;
+
 
 import android.view.View;
 
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,7 +40,7 @@ import org.json.JSONObject;
 import org.webrtc.*;
 import castX.CastX;
 
-public class WebrtcPlayerActivity extends Activity {
+public class WebrtcPlayerActivity extends AppCompatActivity {
 
 
     private boolean isRunning = false;
@@ -46,9 +52,11 @@ public class WebrtcPlayerActivity extends Activity {
 
     private EditText urlEt,et_password;
 
+
+
     private  LinearLayout   passwordve;
 
-    private ImageButton play;
+    private ImageButton play,volume,tv,ptp;
 
     private  boolean isScrcpy;
 
@@ -58,7 +66,15 @@ public class WebrtcPlayerActivity extends Activity {
     private EglBase eglBase;
     private  VideoTrack videoTrack;
 
+    private  String GOOS="android";
 
+    private  boolean sound=true;
+    private  boolean displayPower=true;
+
+    private boolean isConnect=false;
+    AudioTrack audioTrack;
+
+    private AdbConnectFragment adbConnectFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +97,7 @@ public class WebrtcPlayerActivity extends Activity {
         // 设置全屏/小窗切换按钮
         findViewById(R.id.btn_expand).setOnClickListener(v -> enterFullscreen());
         findViewById(R.id.btn_shrink).setOnClickListener(v -> exitFullscreen());
+        adbConnectFragment = (AdbConnectFragment) getSupportFragmentManager().findFragmentById(R.id.adb_connect);
 
         findViewById(R.id.home).setOnClickListener(v -> {
             try {
@@ -92,17 +109,70 @@ public class WebrtcPlayerActivity extends Activity {
                 e.printStackTrace();
             }
         });
+        findViewById(R.id.back).setOnClickListener(v -> {
+            try {
+                JSONObject json = new JSONObject();
+                json.put("type", "keyboard");
+                json.put("code", "back");
+                CastX.wsClientSendControl(json.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        });
+
+
+
+        volume= findViewById(R.id.volume);
+        volume.setOnClickListener(v -> {
+            try {
+                if(audioTrack!=null){
+                    if(  audioTrack.enabled()){
+                        audioTrack.setEnabled(false);
+                        sound=false;
+                    }else {
+                        audioTrack.setEnabled(true);
+                        sound=true;
+                    }
+                    updateStartUI();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        });
+
+       tv= findViewById(R.id.tv);
+       tv.setOnClickListener(v->{
+            displayPower=!displayPower;
+            try {
+                JSONObject json = new JSONObject();
+                json.put("type", "'displayPower'");
+                json.put("action", displayPower ? 1 : 0);
+                CastX.wsClientSendControl(json.toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            updateStartUI();
+        });
+        ptp=findViewById(R.id.ptp);
+        ptp.setOnClickListener(v->{
+            enterPipMode();
+            updateStartUI();
+        });
+
 
         play=findViewById(R.id.play);
         play.setOnClickListener(v -> {
-                    if (!isRunning) {
-                        play();
-                        play.setImageResource(android.R.drawable.ic_media_pause);
+                    if(!isConnect){
+                        Toast.makeText(WebrtcPlayerActivity.this, "Cannot play without connecting to adb", Toast.LENGTH_SHORT).show();
 
+                        return;
+                    }
+                    if (!isRunning) {
+                        new Thread(() -> play()).start();
                     } else {
                         CastX.shutdownWsClient();
                         isRunning=false;
-                        play.setImageResource(android.R.drawable.ic_media_play);
+                        updateStartUI();
                     }
                 }
         );
@@ -151,18 +221,38 @@ public class WebrtcPlayerActivity extends Activity {
             urlEt.setEnabled(false);
             et_password.setText(password);
             passwordve.setVisibility(View.GONE);
+            isConnect=false;
+            showAdbConnectFragment(true);
         } else {
             urlEt.setEnabled(true);
             passwordve.setVisibility(View.VISIBLE);
+            showAdbConnectFragment(false);
         }
         Control.setActivity(this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void enterPipMode() {
+        if (isInPictureInPictureMode()) return;
 
+        PictureInPictureParams params = new PictureInPictureParams.Builder()
+                .setAspectRatio(new Rational(16, 9))
+                .build();
+
+        enterPictureInPictureMode(params);
+    }
     private void updateStartUI(){
-        if (play!=null){
-            play.setImageResource(isRunning?android.R.drawable.ic_media_pause:android.R.drawable.ic_media_play);
+        play.setImageResource(isRunning?android.R.drawable.ic_media_pause:android.R.drawable.ic_media_play);
+        if(GOOS.equals("android")){
+            findViewById(R.id.androidMenu).setVisibility(View.VISIBLE);
+        }else{
+            findViewById(R.id.androidMenu).setVisibility(View.GONE);
         }
+        volume.setImageResource(sound?R.drawable.volume_up_24px:R.drawable.volume_off_24px);
+        tv.setImageResource(displayPower?R.drawable.tv_off_24px:R.drawable.tv_24px);
+
+        findViewById(R.id.menu).setVisibility(isInPictureInPictureMode()?View.GONE:View.VISIBLE);
+
     }
 
 
@@ -174,8 +264,7 @@ public class WebrtcPlayerActivity extends Activity {
             runOnUiThread(() -> {
                 try {
                     videoRenderer.init(eglBase.getEglBaseContext(), null);
-
-                       fullRenderer.init(eglBase.getEglBaseContext(), null);
+                    fullRenderer.init(eglBase.getEglBaseContext(), null);
                     Log.d("WebRTC", "SurfaceViewRenderer 初始化成功");
                 } catch (Exception e) {
                     Log.e("WebRTC", "初始化失败", e);
@@ -187,7 +276,11 @@ public class WebrtcPlayerActivity extends Activity {
 
         PeerConnectionFactory.InitializationOptions options =
                 PeerConnectionFactory.InitializationOptions.builder(this)
+                        .setEnableInternalTracer(true)
+                        .setFieldTrials("WebRTC-Bwe-AlrLimitedBackoff/Enabled/") // 自适应带宽算法
                         .createInitializationOptions();
+
+
 
         PeerConnectionFactory.initialize(options);
 
@@ -202,6 +295,13 @@ public class WebrtcPlayerActivity extends Activity {
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(
                 new ArrayList<>() // 不需要ICE服务器
         );
+        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+        configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+        configuration.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+        configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+
+
+
 
         peerConnection = factory.createPeerConnection(configuration, new PeerConnection.Observer() {
             @Override
@@ -219,7 +319,7 @@ public class WebrtcPlayerActivity extends Activity {
 
                     // 播放音频
                     if (!stream.audioTracks.isEmpty()) {
-                        AudioTrack audioTrack = stream.audioTracks.get(0);
+                        audioTrack = stream.audioTracks.get(0);
                         audioTrack.setEnabled(true);
                         Log.d("WebRTCPlayer", "开始播放音频");
                     }
@@ -355,11 +455,8 @@ public class WebrtcPlayerActivity extends Activity {
             if(auth){
                 initializeWebRTC();
             }else{
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(WebrtcPlayerActivity.this, "login err", Toast.LENGTH_SHORT).show();
-                    }
+                runOnUiThread(()-> {
+                    Toast.makeText(WebrtcPlayerActivity.this, "login err", Toast.LENGTH_SHORT).show();
                 });
             }
         }catch (Exception e){
@@ -377,11 +474,41 @@ public class WebrtcPlayerActivity extends Activity {
         }
     }
 
+    public void infoNotifyCall(String data){
+        System.out.println("infoNotifyCall data:"+data);
+        try {
+            JSONObject json = new JSONObject(data);
+            boolean useAdb = json.getBoolean("useAdb");
+            boolean adbConnect = json.getBoolean("adbConnect");
+
+            if(useAdb&&adbConnect){
+                isConnect=true;
+            }
+            showAdbConnectFragment(!isConnect);
+        } catch (Exception e) {
+
+           e.printStackTrace();
+        }
+    }
+
+    private void showAdbConnectFragment(boolean show){
+        runOnUiThread(()-> {
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            if (show) {
+                transaction.show(adbConnectFragment);
+            } else {
+                transaction.hide(adbConnectFragment);
+            }
+            transaction.commit();
+        });
+    }
+
+
     private void setRemoteDescription(String remoteSdp ) throws JSONException {
 
         JSONObject json = new JSONObject(remoteSdp);
         String sdpStr = json.getString("sdp");
-
+        GOOS=json.getString("GOOS");
         JSONObject sdpJson = new JSONObject(sdpStr);
 
         String sdp=sdpJson.getString("sdp");
@@ -418,7 +545,7 @@ public class WebrtcPlayerActivity extends Activity {
     private void play() {
         try {
             String url = String.valueOf(urlEt.getText());
-            URI uri = new URI(url);
+            URI uri = new URI(url.trim());
             String wsUrl = (uri.getScheme().equals("http")?"ws":"wss")+ "://" + uri.getHost() +  (uri.getPort()!=-1?(":"+uri.getPort()):"") + "/ws";
             String password = String.valueOf(et_password.getText());
             DisplayMetrics metrics = new DisplayMetrics();
@@ -431,9 +558,15 @@ public class WebrtcPlayerActivity extends Activity {
             CastX.startWsClient(wsUrl, password, maxSize);
             isRunning = true;
         }catch (URISyntaxException e){
-            Toast.makeText(this, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
+            runOnUiThread(() -> {
+                Toast.makeText(this, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
+            });
         }
+        runOnUiThread(() -> {
+            updateStartUI();
+        });
     }
+
 
 
     private void enterFullscreen() {
@@ -450,6 +583,7 @@ public class WebrtcPlayerActivity extends Activity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        updateStartUI();
     }
 
     private void exitFullscreen() {
@@ -458,7 +592,7 @@ public class WebrtcPlayerActivity extends Activity {
         miniContainer.setVisibility(View.VISIBLE);
         // 2. 隐藏全屏容器
         fullscreenContainer.setVisibility(View.GONE);
-        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         // 4. 恢复系统UI
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
     }
@@ -549,12 +683,12 @@ public class WebrtcPlayerActivity extends Activity {
                             startX=0;
                             startY=0;
                             duration =System.currentTimeMillis() - downTime;
-                            if(duration<20){
-                                duration=20;
+                            if(duration<15){
+                                duration=15;
                             }
                             downTime=0;
                             type="click";
-                            if(duration>400){
+                            if(duration>400&&!GOOS.equals("android")){
                                 type="rightClick";
                             }
                         }
@@ -577,7 +711,7 @@ public class WebrtcPlayerActivity extends Activity {
 
                     json.put("videoWidth", width);
                     json.put("videoHeight", height);
-                    json.put("'duration'", duration);
+                    json.put("duration", duration);
                     CastX.wsClientSendControl(json.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -586,5 +720,7 @@ public class WebrtcPlayerActivity extends Activity {
             return true;
         }
     };
+
+
 
 }

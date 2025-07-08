@@ -33,6 +33,14 @@
         </LinearLayout>
 
 
+
+        <fragment
+            android:id="@+id/adb_connect"
+            android:name="com.dosgo.castx.AdbConnectFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+          />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -83,7 +91,7 @@
 
 
         <!-- 小窗播放器容器 -->
-        <RelativeLayout
+        <FrameLayout
             android:id="@+id/mini_player_container"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -93,49 +101,15 @@
             <org.webrtc.SurfaceViewRenderer
                 android:id="@+id/remote_video_view"
                 android:layout_width="wrap_content"
+                android:layout_gravity="center_horizontal"
                 android:layout_height="wrap_content"/>
 
-        </RelativeLayout>
+        </FrameLayout>
     </LinearLayout>
 
     <!-- 全屏时的播放器（初始隐藏） -->
-    <FrameLayout
-        android:id="@+id/fullscreen_container"
+    <include
+        layout="@layout/full_player"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="@android:color/black">
-
-        <org.webrtc.SurfaceViewRenderer
-            android:id="@+id/fullscreen_surface"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|end"
-            android:orientation="horizontal"
-            android:padding="16dp">
-
-            <!-- 主页按钮 -->
-            <ImageButton
-                android:id="@+id/home"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/home_24px"
-                android:layout_marginEnd="8dp"/>
-
-            <!-- 退出全屏按钮 -->
-            <ImageButton
-                android:id="@+id/btn_shrink"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/fullscreen_exit_24px"/>
-        </LinearLayout>
-
-
-
-    </FrameLayout>
+        android:layout_height="match_parent" />
 </FrameLayout>

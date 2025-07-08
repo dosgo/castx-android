@@ -56,8 +56,17 @@ public class ScrcpyClientFragment extends Fragment {
                 Toast.makeText(context, R.string.scrcpyNotStarted, Toast.LENGTH_SHORT).show();
                 return;
             }
+            openView();
+        });
+        view.findViewById(R.id.btn_open_browser).setOnClickListener(v -> {
+            if (! Status.scrcpyIsRunning) {
+                Toast.makeText(context, R.string.scrcpyNotStarted, Toast.LENGTH_SHORT).show();
+                return;
+            }
             openEdgeCustomTab();
         });
+
+
 
 
         btnControl.setOnClickListener(v -> {
@@ -105,6 +114,7 @@ public class ScrcpyClientFragment extends Fragment {
         intent.putExtra("url", "http://127.0.0.1:8082/");
         intent.putExtra("isScrcpy", true);
         intent.putExtra("password", password);
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
         startActivity(intent);
     }
 
@@ -185,7 +195,6 @@ public class ScrcpyClientFragment extends Fragment {
             customTabsIntent.launchUrl(context, Uri.parse(url));
         } else{
             Toast.makeText(context, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
-            openView();
         }
     }
 

@@ -28,8 +28,9 @@
         <activity
             android:name=".WebrtcPlayerActivity"
             android:exported="true"
-            android:configChanges="orientation|screenSize"
-            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
+            android:supportsPictureInPicture="true">
 
         </activity>
 
@@ -70,6 +71,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.USB_PERMISSION" />
     <!-- Android 6.0+ 需要 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>

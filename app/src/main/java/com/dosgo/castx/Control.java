@@ -224,6 +224,12 @@ class Control   {
         }
     }
 
+    public static  void infoNotifyCall(String data){
+        if(play!=null){
+            play.infoNotifyCall(data);
+        }
+    }
+
 
 }
 

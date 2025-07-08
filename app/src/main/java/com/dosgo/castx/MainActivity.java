@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity
             return ;
         } else if (checkedId == R.id.castx_client ) {
             Intent intent = new Intent(this, WebrtcPlayerActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
             return ;
         }

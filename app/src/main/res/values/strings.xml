@@ -23,5 +23,13 @@
     <string name="chromeNoInstall">You don\'t have Edge or Chrome installed so you can\'t use it</string>
     <string name="scrcpyurl">Scrcpy Url:</string>
     <string name="urlErrMsg">Screencast URL error</string>
+    <string name="port">port</string>
+    <string name="connect">Connect</string>
+    <string name="pair">Pair</string>
+    <string name="pairCode">Pairing code</string>
+    <string name="pairHint"> 6 digits</string>
+
+
+
 
 </resources>
