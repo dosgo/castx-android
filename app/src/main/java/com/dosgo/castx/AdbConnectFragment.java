@@ -89,6 +89,7 @@ public class AdbConnectFragment extends Fragment {
                    // json.put("connectPort", "home");
 
                     CastX.wsClientConnectAdb(json.toString());
+                    System.out.println("btnPair json:"+json+"\r\n");
                 }catch (Exception e){
                     e.printStackTrace();
                 }

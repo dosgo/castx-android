@@ -227,6 +227,7 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
             urlEt.setEnabled(true);
             passwordve.setVisibility(View.VISIBLE);
             showAdbConnectFragment(false);
+            isConnect=true;
         }
         Control.setActivity(this);
     }
