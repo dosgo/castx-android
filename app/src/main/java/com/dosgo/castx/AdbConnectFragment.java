@@ -269,20 +269,21 @@ public class AdbConnectFragment extends Fragment {
         if (usbManager == null) {
             return;
         }
-
+        System.out.println("findAndClaimTargetDevice\r\n");
         // 获取所有已连接的USB设备
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         List<UsbItemAdapter.UsbItem> items = new ArrayList<>();
         for (Map.Entry<String, UsbDevice> entry : deviceList.entrySet()) {
             UsbDevice device = entry.getValue();
             items.add( new UsbItemAdapter.UsbItem(device.getDeviceName(),device));
+            System.out.println("findAndClaimTargetDevice1 device:\r\n"+device);
         }
-
+        System.out.println("findAndClaimTargetDevice1"+items);
         // 设置适配器
         UsbItemAdapter adapter = new UsbItemAdapter(getActivity(), items);
         ListView listView = view.findViewById(R.id.usbList);
         listView.setAdapter(adapter);
-
+        System.out.println("findAndClaimTargetDevice2\r\n");
         // 设置列表项点击事件
         listView.setOnItemClickListener((parent, view, position, id) -> {
             UsbItemAdapter.UsbItem item = items.get(position);

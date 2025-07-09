@@ -13,7 +13,7 @@ import android.widget.Toast;
 import java.util.List;
 
 
-public class UsbItemAdapter extends ArrayAdapter<String> {
+public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
 
     public static class UsbItem {
         private String name;
@@ -33,15 +33,22 @@ public class UsbItemAdapter extends ArrayAdapter<String> {
             return device;
         }
     }
+    private final List<UsbItem> items;
 
     public UsbItemAdapter(Context context, List<UsbItem> items) {
         super(context, 0);
+        this.items = items;
+    }
+
+    @Override
+    public UsbItem getItem(int position) {
+        return items.get(position); // 正确返回UsbItem对象
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // 获取当前项的数据
-        String title = getItem(position);
+        UsbItem item = getItem(position);
         
         // 检查是否已有视图可复用
         if (convertView == null) {
@@ -53,12 +60,12 @@ public class UsbItemAdapter extends ArrayAdapter<String> {
         Button button = convertView.findViewById(R.id.item_button);
         
         // 设置标题文本
-        titleView.setText(title);
+        titleView.setText(item.getName());
         
         // 设置按钮点击事件
         button.setOnClickListener(v -> {
             // 显示点击了哪个项目的按钮
-            Toast.makeText(getContext(), "点击了: " + title, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "点击了: " + item.getName(), Toast.LENGTH_SHORT).show();
         });
         
         return convertView;
