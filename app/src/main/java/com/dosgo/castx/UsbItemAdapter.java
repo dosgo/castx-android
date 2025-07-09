@@ -64,9 +64,9 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
         TextView titleView = convertView.findViewById(R.id.item_title);
         Button button = convertView.findViewById(R.id.item_button);
 
-        item.getDevice().getDeviceName()
+     
         // 设置标题文本
-        titleView.setText(item.getName());
+        titleView.setText(item.getDevice().getDeviceName());
         
         // 设置按钮点击事件
         button.setOnClickListener(v -> {
