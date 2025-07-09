@@ -30,7 +30,7 @@
     <string name="pairHint">6 digits</string>
     <string name="pairMsg">You need to start before pairing</string>
     <string name="connectAdbMsg">You need to start it before you can connect to adb</string>
-
+    <string name="usbConnect">connect device</string>
 
     <string name="castxTab">Castx</string>
     <string name="scrcpyTab">Scrcpy</string>

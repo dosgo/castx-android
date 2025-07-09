@@ -18,7 +18,7 @@
         android:id="@+id/item_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="操作"
+        android:text="@string/usbConnect"
         android:backgroundTint="#2196F3"
         android:textColor="#FFFFFF"
         android:paddingHorizontal="16dp"/>

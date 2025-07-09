@@ -90,7 +90,6 @@ public class ScrcpyClientFragment extends Fragment {
 
         passwordInput = view.findViewById(R.id.et_password);
 
-        loadSavedPassword();
         passwordInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -104,6 +103,7 @@ public class ScrcpyClientFragment extends Fragment {
                 savePassword(s.toString());
             }
         });
+        loadSavedPassword();
     }
 
 

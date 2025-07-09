@@ -30,5 +30,6 @@
     <string name="castxTab">Castx</string>
     <string name="scrcpyTab">Scrcpy</string>
     <string name="scrcpyStartMsg">scrcpy接收需要先启动scrcpy服务</string>
+    <string name="usbConnect">连接设备</string>
 
 </resources>
