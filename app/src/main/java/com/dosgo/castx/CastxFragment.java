@@ -115,6 +115,15 @@ public class CastxFragment extends Fragment {
         passwordInput.setText(savedPassword);
     }
 
+
+    private void openReceive() {
+        Intent intent = new Intent(getActivity(), WebrtcPlayerActivity.class);
+        intent.putExtra("isScrcpy", false);
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
+        startActivity(intent);
+    }
+
+
     @Override
     public void onResume() {
          IntentFilter filter = new IntentFilter(ScreenCastService.ACTION_UPDATE);

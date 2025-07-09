@@ -24,12 +24,18 @@
     <string name="scrcpyurl">Scrcpy Url:</string>
     <string name="urlErrMsg">Screencast URL error</string>
     <string name="port">port</string>
-    <string name="connect">Connect</string>
-    <string name="pair">Pair</string>
+    <string name="connect">Adb connect</string>
+    <string name="pair">Adb Pair</string>
     <string name="pairCode">Pairing code</string>
-    <string name="pairHint"> 6 digits</string>
+    <string name="pairHint">6 digits</string>
+    <string name="pairMsg">You need to start before pairing</string>
+    <string name="connectAdbMsg">You need to start it before you can connect to adb</string>
 
 
+    <string name="castxTab">Castx</string>
+    <string name="scrcpyTab">Scrcpy</string>
+
+    <string name="scrcpyStartMsg">Scrcpy reception requires the scrcpy service to be started first</string>
 
 
 </resources>

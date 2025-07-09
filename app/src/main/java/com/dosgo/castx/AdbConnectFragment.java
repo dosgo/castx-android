@@ -7,10 +7,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -68,11 +71,45 @@ public class AdbConnectFragment extends Fragment {
         _view.findViewById(R.id.tab_wifi).setOnClickListener(tab);
         _view.findViewById(R.id.tab_usb).setOnClickListener(tab);
         ipEt= _view.findViewById(R.id.ipEt);
+        ipEt.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 当文本改变后自动保存密码
+                saveConf("adbAddress",s.toString());
+            }
+        });
+
         authPort=_view.findViewById(R.id.authPort);
         etAuthCode=_view.findViewById(R.id.etAuthCode);
         etConectPort=_view.findViewById(R.id.etConectPort);
+        etConectPort.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 当文本改变后自动保存密码
+                saveConf("conectPort",s.toString());
+            }
+        });
         view.findViewById(R.id.btnPair).setOnClickListener(v -> {
                 System.out.println("btnPair\r\n");
+            WebrtcPlayerActivity webrtcPlayerActivity = (WebrtcPlayerActivity) getActivity();
+                if(!webrtcPlayerActivity.isRunning){
+                    Toast.makeText(getActivity(),  R.string.pairMsg, Toast.LENGTH_SHORT).show();
+
+                    return;
+                }
+
                 try {
                     WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
                     Display display = windowManager.getDefaultDisplay();
@@ -82,10 +119,11 @@ public class AdbConnectFragment extends Fragment {
 
                     JSONObject json = new JSONObject();
                     json.put("adbType", "pair");
+                    json.put("selectedType", "wifi");
                     json.put("max_size", maxSize);
                     json.put("address",  ipEt.getText());
-                    json.put("authPort", authPort.getText());
-                    json.put("authCode", etAuthCode.getText());
+                    json.put("authPort", Long.parseLong(authPort.getText().toString().trim()));
+                    json.put("authCode",  Long.parseLong(etAuthCode.getText().toString().trim()));
                    // json.put("connectPort", "home");
 
                     CastX.wsClientConnectAdb(json.toString());
@@ -96,6 +134,13 @@ public class AdbConnectFragment extends Fragment {
             }
         );
         view.findViewById(R.id.btnConnect).setOnClickListener(v -> {
+            WebrtcPlayerActivity webrtcPlayerActivity = (WebrtcPlayerActivity) getActivity();
+            if(!webrtcPlayerActivity.isRunning){
+                Toast.makeText(getActivity(), R.string.connectAdbMsg, Toast.LENGTH_SHORT).show();
+
+                return;
+            }
+
             try {
                 WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
                 Display display = windowManager.getDefaultDisplay();
@@ -106,8 +151,9 @@ public class AdbConnectFragment extends Fragment {
                 JSONObject json = new JSONObject();
                 json.put("adbType", "connect");
                 json.put("max_size", maxSize);
+                json.put("selectedType", "wifi");
                 json.put("address",  ipEt.getText());
-                json.put("connectPort", etConectPort.getText());
+                json.put("connectPort", Long.parseLong(etConectPort.getText().toString().trim()));
 
                 CastX.wsClientConnectAdb(json.toString());
             }catch (Exception e){
@@ -115,11 +161,27 @@ public class AdbConnectFragment extends Fragment {
             }
 
         });
-
+        loadConf();
     }
 
 
+    // 保存密码到SharedPreferences
+    private void saveConf(String key,String value) {
+        SharedPreferences prefs =getActivity().getSharedPreferences("adbConf", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(key, value);
+        editor.apply();
+    }
 
+    // 从SharedPreferences加载已保存的密码
+    private void loadConf() {
+        SharedPreferences prefs = getActivity().getSharedPreferences("adbConf", Context.MODE_PRIVATE);
+        String adbAddress = prefs.getString("adbAddress", "");
+        String conectPort = prefs.getString("conectPort", "");
+
+        ipEt.setText(adbAddress);
+        etConectPort.setText(conectPort);
+    }
 
 
 

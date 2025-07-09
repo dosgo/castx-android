@@ -32,6 +32,27 @@ public class MainActivity extends AppCompatActivity
         loadFragment(castxFragment);
         tabBar = findViewById(R.id.tab_bar);
         tabBar.setOnCheckedChangeListener(this);
+
+        processIntent();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // 更新Intent
+        processIntent();
+    }
+
+    private void processIntent() {
+        int selectTab = getIntent().getIntExtra("selectTab",-1);
+        switch (selectTab){
+            case 1:
+                tabBar.check(R.id.castx_server);
+                break;
+            case 2:
+                tabBar.check(R.id.scrcpy_client);
+                break;
+        }
     }
 
     @Override
@@ -46,8 +67,9 @@ public class MainActivity extends AppCompatActivity
             return ;
         } else if (checkedId == R.id.castx_client ) {
             Intent intent = new Intent(this, WebrtcPlayerActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
             startActivity(intent);
+            tabBar.check(R.id.castx_server);
             return ;
         }
         return ;
@@ -55,7 +77,6 @@ public class MainActivity extends AppCompatActivity
 
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
 
         // 如果fragment已经添加过，显示它，否则添加新的
         if (fragment.isAdded()) {
@@ -71,7 +92,6 @@ public class MainActivity extends AppCompatActivity
         if (scrcpyClientFragment != null && scrcpyClientFragment != fragment && scrcpyClientFragment.isAdded()) {
             transaction.hide(scrcpyClientFragment);
         }
-
 
         transaction.commit();
     }

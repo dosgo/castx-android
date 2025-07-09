@@ -21,9 +21,14 @@
     <string name="scrcpyurl">scrcpy地址:</string>
     <string name="urlErrMsg">投屏地址不正确</string>
     <string name="port">端口</string>
-    <string name="connect">连接</string>
-    <string name="pair">配对</string>
+    <string name="connect">Adb连接</string>
+    <string name="pair">Adb配对</string>
     <string name="pairCode">配对码</string>
     <string name="pairHint">6位数字</string>
+    <string name="pairMsg">要先启动才能配对</string>
+    <string name="connectAdbMsg">要先启动才能连接adb</string>
+    <string name="castxTab">Castx</string>
+    <string name="scrcpyTab">Scrcpy</string>
+    <string name="scrcpyStartMsg">scrcpy接收需要先启动scrcpy服务</string>
 
 </resources>

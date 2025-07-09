@@ -11,10 +11,13 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +28,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.security.SecureRandom;
 import java.util.Enumeration;
 
 
@@ -35,7 +39,7 @@ public class ScrcpyClientFragment extends Fragment {
     private TextView addrView;
 
     String addrTxt="";
-
+    private EditText passwordInput;
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -82,8 +86,54 @@ public class ScrcpyClientFragment extends Fragment {
         });
         addrView = view.findViewById(R.id.addrView);
         startMonitoring(context);
+
+
+        passwordInput = view.findViewById(R.id.et_password);
+
+        loadSavedPassword();
+        passwordInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 当文本改变后自动保存密码
+                savePassword(s.toString());
+            }
+        });
     }
 
+
+    // 保存密码到SharedPreferences
+    private void savePassword(String password) {
+        SharedPreferences prefs =  getContext().getSharedPreferences("scrcpyConfig", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("password", password);
+        editor.apply();
+    }
+
+    // 从SharedPreferences加载已保存的密码
+    private void loadSavedPassword() {
+        SharedPreferences prefs =  getContext().getSharedPreferences("scrcpyConfig", Context.MODE_PRIVATE);
+        String savedPassword = prefs.getString("password", "");
+        if(savedPassword.length()>0){
+            passwordInput.setText(savedPassword);
+        }else{
+            passwordInput.setText(generateSimplePassword(6));
+        }
+    }
+    public static String generateSimplePassword(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
     public  void startMonitoring(Context context) {
         ConnectivityManager cm = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -107,13 +157,9 @@ public class ScrcpyClientFragment extends Fragment {
     }
 
     private void openView() {
-        SharedPreferences prefs = getActivity().getSharedPreferences("config", Context.MODE_PRIVATE);
-        String password = prefs.getString("password", "");
-
         Intent intent = new Intent(getActivity(), WebrtcPlayerActivity.class);
         intent.putExtra("url", "http://127.0.0.1:8082/");
         intent.putExtra("isScrcpy", true);
-        intent.putExtra("password", password);
         intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
         startActivity(intent);
     }
@@ -199,6 +245,28 @@ public class ScrcpyClientFragment extends Fragment {
     }
 
 
+    private void openWithSpecificBrowser() {
+        String url = "http://127.0.0.1:8082/scrcpy.html";
+        try {
+            Uri uri = Uri.parse(url);
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            Context context=getContext();
+            if(isEdgeInstalled(context)) {
+                intent.setPackage("com.microsoft.emmx");
+                startActivity(intent);
+            }else if(isChromeInstalled(context)) {
+                intent.setPackage("com.android.chrome");//chrmoe
+                startActivity(intent);
+            }else if(isFirefoxInstalled(context)){
+                intent.setPackage("org.mozilla.firefox");//Firefox
+                startActivity(intent);
+            } else{
+                Toast.makeText(context, R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(getActivity(), R.string.stopScreenMirroringMsg, Toast.LENGTH_LONG).show();
+        }
+    }
 
     @Override
     public void onResume() {

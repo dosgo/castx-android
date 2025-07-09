@@ -3,11 +3,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
+
+
     <!-- 主内容区域 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
+                <RadioGroup
+                    android:id="@+id/tab_top"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+
+                    android:orientation="horizontal"
+                    android:background="#EFEFEF">
+
+                    <RadioButton
+                        android:id="@+id/castx_client"
+                        style="@style/TabButtonStyle"
+                        android:checked="true"
+                        android:textColor="@color/tab_text_selector"
+                        android:background="@drawable/tab_background_selector"
+                        android:textSize="16sp"
+                        android:text="@string/castxTab" />
+
+                    <RadioButton
+                        android:id="@+id/scrcpy_client"
+                        style="@style/TabButtonStyle"
+                        android:textColor="@color/tab_text_selector"
+                        android:background="@drawable/tab_background_selector"
+                        android:textSize="16sp"
+                        android:text="@string/scrcpyTab" />
+
+
+                </RadioGroup>
+
 
         <!-- 其他UI元素 -->
         <LinearLayout
@@ -15,12 +47,22 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             >
+
+
+            <ImageButton
+                android:id="@+id/backMain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:src="@drawable/arrow_back_24px"
+                />
+
             <ImageButton
                 android:id="@+id/play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:src="@android:drawable/ic_media_play"
+                android:src="@drawable/play_circle_24px"
                 />
             <ImageButton
                 android:id="@+id/btn_expand"
@@ -105,6 +147,7 @@
                 android:layout_height="wrap_content"/>
 
         </FrameLayout>
+
     </LinearLayout>
 
     <!-- 全屏时的播放器（初始隐藏） -->

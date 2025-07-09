@@ -157,8 +157,6 @@ public class VideoEncoder {
                 mythis.srcHeight=height;
                 mythis.limit();
                 start();
-                //通知修改了大小
-                CastX.setSize(width,height,width>height?1:0);
             }
         }
 

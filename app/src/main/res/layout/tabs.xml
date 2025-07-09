@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RadioGroup
+        android:id="@+id/tab_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#EFEFEF">
+
+        <RadioButton
+            android:id="@+id/castx_server"
+            style="@style/TabButtonStyle"
+            android:checked="true"
+            android:textColor="@color/tab_text_selector"
+            android:background="@drawable/tab_background_selector"
+            android:textSize="16sp"
+            android:text="@string/castxServer" />
+
+        <RadioButton
+            android:id="@+id/scrcpy_client"
+            style="@style/TabButtonStyle"
+            android:textColor="@color/tab_text_selector"
+            android:background="@drawable/tab_background_selector"
+            android:textSize="16sp"
+            android:text="@string/scrcpyClient" />
+
+        <RadioButton
+            android:id="@+id/castx_client"
+            style="@style/TabButtonStyle"
+            android:textColor="@color/tab_text_selector"
+            android:background="@drawable/tab_background_selector"
+            android:textSize="16sp"
+            android:text="@string/castxClient" />
+    </RadioGroup>
+</LinearLayout>

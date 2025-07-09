@@ -12,36 +12,8 @@
         android:layout_weight="1" />
 
     <!-- 底部导航栏，这里使用RadioGroup模拟，也可以使用BottomNavigationView -->
-    <RadioGroup
-        android:id="@+id/tab_bar"
+    <include
+        layout="@layout/tabs"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#EFEFEF">
-
-        <RadioButton
-            android:id="@+id/castx_server"
-            style="@style/TabButtonStyle"
-            android:checked="true"
-            android:textColor="@color/tab_text_selector"
-            android:background="@drawable/tab_background_selector"
-            android:textSize="16sp"
-            android:text="@string/castxServer" />
-
-        <RadioButton
-            android:id="@+id/scrcpy_client"
-            style="@style/TabButtonStyle"
-            android:textColor="@color/tab_text_selector"
-            android:background="@drawable/tab_background_selector"
-            android:textSize="16sp"
-            android:text="@string/scrcpyClient" />
-
-        <RadioButton
-            android:id="@+id/castx_client"
-            style="@style/TabButtonStyle"
-            android:textColor="@color/tab_text_selector"
-            android:background="@drawable/tab_background_selector"
-            android:textSize="16sp"
-            android:text="@string/castxClient" />
-    </RadioGroup>
+        android:layout_height="wrap_content" />
 </LinearLayout>

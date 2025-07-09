@@ -57,7 +57,7 @@ public class ScrcpyClientService extends Service {
         );
         CastX.shutdownScrcpyClient();
         String dirPath = getFilesDir().getAbsolutePath();
-        SharedPreferences prefs = getSharedPreferences("config", Context.MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("scrcpyConfig", Context.MODE_PRIVATE);
         String savedPassword = prefs.getString("password", "");
         CastX.startScrcpyClient(8082,"castX-"+androidId, dirPath + File.separator,savedPassword);
         Status.scrcpyIsRunning=true;
