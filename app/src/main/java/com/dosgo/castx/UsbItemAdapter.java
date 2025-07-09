@@ -64,16 +64,15 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
         TextView titleView = convertView.findViewById(R.id.item_title);
         Button button = convertView.findViewById(R.id.item_button);
 
-     
+
         // 设置标题文本
-        titleView.setText(item.getDevice().getDeviceName());
+        titleView.setText(item.getDevice().getProductName());
         
         // 设置按钮点击事件
         button.setOnClickListener(v -> {
             // 显示点击了哪个项目的按钮
-            Toast.makeText(getContext(), "点击了: " + item.getName(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "点击了: " + item.getDevice().getProductName(), Toast.LENGTH_SHORT).show();
         });
-        
         return convertView;
     }
 }
