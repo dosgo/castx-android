@@ -46,6 +46,11 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
     }
 
     @Override
+    public int getCount() {
+        return items.size();
+    }
+
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // 获取当前项的数据
         UsbItem item = getItem(position);
@@ -58,7 +63,8 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
         // 查找视图中的组件
         TextView titleView = convertView.findViewById(R.id.item_title);
         Button button = convertView.findViewById(R.id.item_button);
-        
+
+        item.getDevice().getDeviceName()
         // 设置标题文本
         titleView.setText(item.getName());
         
