@@ -60,10 +60,12 @@ public class UsbToWebSocket {
         this.usbPermissionReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
+
+                System.out.println("usbPermissionReceiver:"+action);
                 if (ACTION_USB_PERMISSION.equals(action)) {
                     synchronized (this) {
                         UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-
+                        System.out.println("intent:"+intent);
                         if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                             if(device != null){
                                 connectUsb(device);
@@ -89,12 +91,13 @@ public class UsbToWebSocket {
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED); // 系统广播
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        filter.addAction(ACTION_USB_PERMISSION);
         // 使用 ContextCompat.registerReceiver 并指定标志位
         ContextCompat.registerReceiver(
                 context,              // 上下文 (Activity, Service, Application)
                 usbPermissionReceiver,            // 你的接收器实例
                 filter,                // 意图过滤器
-                ContextCompat.RECEIVER_NOT_EXPORTED //
+                ContextCompat.RECEIVER_EXPORTED //
         );
     }
 
@@ -105,8 +108,10 @@ public class UsbToWebSocket {
     }
     public void requestUsbPermission(UsbDevice _usbDevice ) {
         this.usbDevice=_usbDevice;
+        Intent intent = new Intent(ACTION_USB_PERMISSION);
+        intent.setPackage(context.getPackageName());
         PendingIntent permissionIntent = PendingIntent.getBroadcast(
-                context, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
+                context, 0,intent, PendingIntent.FLAG_MUTABLE
         );
         usbManager.requestPermission(usbDevice, permissionIntent);
     }
@@ -153,7 +158,7 @@ public class UsbToWebSocket {
 
             @Override
             public void onMessage(String message) {
-
+                System.out.println("onMessage11111");
             }
 
             @Override
@@ -190,7 +195,7 @@ public class UsbToWebSocket {
                             inEndpoint,
                             buffer,
                             buffer.length,
-                            100 // 超时时间(ms)
+                            0 // 超时时间(ms)
                     );
 
                     if (bytesRead > 0) {
@@ -199,7 +204,8 @@ public class UsbToWebSocket {
                         sendToWebSocket(data);
                     } else if (bytesRead < 0) {
                         // 错误或超时
-                        Log.w(TAG, "USB读取错误: " + bytesRead);
+                       // Log.w(TAG, "USB读取错误: " + bytesRead);
+                       // break;
                     }
                 }
             }
@@ -214,7 +220,7 @@ public class UsbToWebSocket {
 
     private void sendToUsb(byte[] data) {
         if (usbConnection != null && outEndpoint != null) {
-            int bytesSent = usbConnection.bulkTransfer(outEndpoint, data, data.length, 100);
+            int bytesSent = usbConnection.bulkTransfer(outEndpoint, data, data.length, 0);
             if (bytesSent < 0) {
                 Log.w(TAG, "USB写入错误: " + bytesSent);
             }

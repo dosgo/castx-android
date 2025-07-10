@@ -101,7 +101,7 @@ public class AdbConnectFragment extends Fragment {
         });
         view.findViewById(R.id.btnPair).setOnClickListener(v -> {
                 System.out.println("btnPair\r\n");
-            WebrtcPlayerActivity webrtcPlayerActivity = (WebrtcPlayerActivity) getActivity();
+                 WebrtcPlayerActivity webrtcPlayerActivity = (WebrtcPlayerActivity) getActivity();
                 if(!webrtcPlayerActivity.isRunning){
                     Toast.makeText(getActivity(),  R.string.pairMsg, Toast.LENGTH_SHORT).show();
 
@@ -232,9 +232,10 @@ public class AdbConnectFragment extends Fragment {
                 items.add(new UsbItemAdapter.UsbItem(device.getDeviceName(), device));
             }
         }
+        WebrtcPlayerActivity webrtcPlayerActivity = (WebrtcPlayerActivity) getActivity();
 
         // 设置适配器
-        UsbItemAdapter adapter = new UsbItemAdapter(getActivity(), items,usbToWebSocket);
+        UsbItemAdapter adapter = new UsbItemAdapter(webrtcPlayerActivity, items,usbToWebSocket);
         ListView listView = view.findViewById(R.id.usbList);
         listView.setAdapter(adapter);
     }

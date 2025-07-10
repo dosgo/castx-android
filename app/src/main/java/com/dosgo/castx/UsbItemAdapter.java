@@ -36,10 +36,12 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
     }
     private final List<UsbItem> items;
     private UsbToWebSocket usbToWebSocket;
-    public UsbItemAdapter(Context context, List<UsbItem> items,UsbToWebSocket usbToWebSocket) {
-        super(context, 0);
+    private  WebrtcPlayerActivity activity;
+    public UsbItemAdapter( WebrtcPlayerActivity activity, List<UsbItem> items,UsbToWebSocket usbToWebSocket) {
+        super(activity, 0);
         this.items = items;
         this.usbToWebSocket=usbToWebSocket;
+        this.activity=activity;
     }
 
     @Override
@@ -68,6 +70,11 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
         titleView.setText(item.getDevice().getProductName());
         // 设置按钮点击事件
         button.setOnClickListener(v -> {
+            if(! this.activity.isRunning){
+                Toast.makeText( this.activity,  R.string.pairMsg, Toast.LENGTH_SHORT).show();
+
+                return;
+            }
             usbToWebSocket.requestUsbPermission(item.getDevice());
         });
         return convertView;
