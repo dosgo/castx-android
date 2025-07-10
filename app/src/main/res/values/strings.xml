@@ -36,6 +36,7 @@
     <string name="scrcpyTab">Scrcpy</string>
 
     <string name="scrcpyStartMsg">Scrcpy reception requires the scrcpy service to be started first</string>
-
-
+    <string name="connectUsbErr">USB authorization is required to run</string>
+    <string name="connectUsbErr1">The usb device is occupied</string>
+    <string name="connectUsbErr2">Unsupported USB device</string>
 </resources>

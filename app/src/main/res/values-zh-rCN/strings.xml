@@ -31,5 +31,7 @@
     <string name="scrcpyTab">Scrcpy</string>
     <string name="scrcpyStartMsg">scrcpy接收需要先启动scrcpy服务</string>
     <string name="usbConnect">连接设备</string>
-
+    <string name="connectUsbErr">需要usb授权才能运行</string>
+    <string name="connectUsbErr1">usb设备被占用</string>
+    <string name="connectUsbErr2">不支持的usb设备</string>
 </resources>

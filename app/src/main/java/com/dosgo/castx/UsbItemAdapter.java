@@ -2,6 +2,7 @@ package com.dosgo.castx;
 
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,10 +35,11 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
         }
     }
     private final List<UsbItem> items;
-
-    public UsbItemAdapter(Context context, List<UsbItem> items) {
+    private UsbToWebSocket usbToWebSocket;
+    public UsbItemAdapter(Context context, List<UsbItem> items,UsbToWebSocket usbToWebSocket) {
         super(context, 0);
         this.items = items;
+        this.usbToWebSocket=usbToWebSocket;
     }
 
     @Override
@@ -54,7 +56,6 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
     public View getView(int position, View convertView, ViewGroup parent) {
         // 获取当前项的数据
         UsbItem item = getItem(position);
-        
         // 检查是否已有视图可复用
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.usb_item, parent, false);
@@ -63,15 +64,11 @@ public class UsbItemAdapter extends ArrayAdapter<UsbItemAdapter.UsbItem> {
         // 查找视图中的组件
         TextView titleView = convertView.findViewById(R.id.item_title);
         Button button = convertView.findViewById(R.id.item_button);
-
-
         // 设置标题文本
         titleView.setText(item.getDevice().getProductName());
-        
         // 设置按钮点击事件
         button.setOnClickListener(v -> {
-            // 显示点击了哪个项目的按钮
-            Toast.makeText(getContext(), "点击了: " + item.getDevice().getProductName(), Toast.LENGTH_SHORT).show();
+            usbToWebSocket.requestUsbPermission(item.getDevice());
         });
         return convertView;
     }

@@ -2,11 +2,7 @@ package com.dosgo.castx;
 
 
 import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
@@ -40,9 +36,8 @@ import castX.CastX;
 
 public class AdbConnectFragment extends Fragment {
 
-    private UsbManager usbManager;
-    private static final int REQUEST_USB_PERMISSION = 1;
-    private static final String ACTION_USB_PERMISSION = "com.castx.USB_PERMISSION";
+    private UsbToWebSocket usbToWebSocket;
+
     private  View view;
     private EditText ipEt,authPort,etAuthCode,etConectPort;
 
@@ -50,10 +45,8 @@ public class AdbConnectFragment extends Fragment {
     public void onCreate( Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 通过Activity获取USB管理器
-        usbManager = (UsbManager) requireActivity().getSystemService(Context.USB_SERVICE);
-
-        usbManager.getDeviceList();
+        // 创建USB转WebSocket实例
+        usbToWebSocket = new UsbToWebSocket(getActivity());
     }
 
     @Override
@@ -215,54 +208,7 @@ public class AdbConnectFragment extends Fragment {
             }
         }
     };
-    private void requestUsbPermission(UsbDevice device) {
-        // 创建权限请求意图
-        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
 
-        // 注册广播接收器
-        BroadcastReceiver permissionReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                if (ACTION_USB_PERMISSION.equals(action)) {
-                    synchronized (this) {
-                        UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                        if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                            if (device != null) {
-                                // 权限已授予，操作设备
-                                onUsbPermissionGranted(device);
-                            }
-                        } else {
-                            Toast.makeText(getContext(), "USB权限被拒绝", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                    // 注销接收器
-                    requireActivity().unregisterReceiver(this);
-                }
-            }
-        };
-
-        // 注册广播接收器
-        ContextCompat.registerReceiver(requireActivity(), permissionReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
-
-        // 创建PendingIntent
-        Intent permissionIntent = new Intent(ACTION_USB_PERMISSION);
-        // 使用FLAG_MUTABLE以适配Android 12+
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                requireContext(),
-                0,
-                permissionIntent,
-                PendingIntent.FLAG_IMMUTABLE
-        );
-
-        // 请求权限
-        usbManager.requestPermission(device, pendingIntent);
-    }
-
-    private void onUsbPermissionGranted(UsbDevice device) {
-        // 处理已获得权限的设备
-        Toast.makeText(getContext(), "获得设备访问权限: " + device.getDeviceName(), Toast.LENGTH_SHORT).show();
-    }
 
     public  void findAndClaimTargetDevice(Context context) {
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
@@ -280,7 +226,7 @@ public class AdbConnectFragment extends Fragment {
         }
         System.out.println("findAndClaimTargetDevice1"+items);
         // 设置适配器
-        UsbItemAdapter adapter = new UsbItemAdapter(getActivity(), items);
+        UsbItemAdapter adapter = new UsbItemAdapter(getActivity(), items,usbToWebSocket);
         ListView listView = view.findViewById(R.id.usbList);
         listView.setAdapter(adapter);
         System.out.println("findAndClaimTargetDevice2\r\n");
