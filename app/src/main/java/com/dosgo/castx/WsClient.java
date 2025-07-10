@@ -67,7 +67,7 @@ public class WsClient {
                     isConnected = false;
                     isAuth = false;
                     securityKey = "";
-
+                    System.out.println("ws client onClose\r\n");
                 }
 
                 @Override
@@ -75,6 +75,9 @@ public class WsClient {
                     ex.printStackTrace();
                 }
             };
+
+
+            webSocketClient.setConnectionLostTimeout(0);
 
             webSocketClient.connect();
 
