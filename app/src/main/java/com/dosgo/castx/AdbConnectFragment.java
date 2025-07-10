@@ -130,20 +130,12 @@ public class AdbConnectFragment extends Fragment {
             WebrtcPlayerActivity webrtcPlayerActivity = (WebrtcPlayerActivity) getActivity();
             if(!webrtcPlayerActivity.isRunning){
                 Toast.makeText(getActivity(), R.string.connectAdbMsg, Toast.LENGTH_SHORT).show();
-
                 return;
             }
 
             try {
-                WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
-                Display display = windowManager.getDefaultDisplay();
-                DisplayMetrics metrics = new DisplayMetrics();
-                display.getRealMetrics(metrics);
-                int maxSize = metrics.widthPixels > metrics.heightPixels ? metrics.widthPixels : metrics.heightPixels;
-
                 JSONObject json = new JSONObject();
                 json.put("adbType", "connect");
-                json.put("max_size", maxSize);
                 json.put("selectedType", "wifi");
                 json.put("address",  ipEt.getText());
                 json.put("connectPort", Long.parseLong(etConectPort.getText().toString().trim()));
