@@ -47,6 +47,11 @@ public class AdbConnectFragment extends Fragment {
 
         // 创建USB转WebSocket实例
         usbToWebSocket = new UsbToWebSocket(getActivity());
+        // 设置 USB 变动回调
+        usbToWebSocket.setUsbChangeCallback(() -> {
+            // 这个匿名函数会在 USB 设备变动时被调用
+            findAndClaimTargetDevice(getActivity());
+        });
     }
 
     @Override
@@ -104,22 +109,18 @@ public class AdbConnectFragment extends Fragment {
                 }
 
                 try {
-                    WindowManager windowManager = (WindowManager) getActivity().getSystemService(Activity.WINDOW_SERVICE);
-                    Display display = windowManager.getDefaultDisplay();
-                    DisplayMetrics metrics = new DisplayMetrics();
-                    display.getRealMetrics(metrics);
-                    int maxSize = metrics.widthPixels > metrics.heightPixels ? metrics.widthPixels : metrics.heightPixels;
+
 
                     JSONObject json = new JSONObject();
                     json.put("adbType", "pair");
                     json.put("selectedType", "wifi");
-                    json.put("max_size", maxSize);
                     json.put("address",  ipEt.getText());
                     json.put("authPort", Long.parseLong(authPort.getText().toString().trim()));
                     json.put("authCode",  Long.parseLong(etAuthCode.getText().toString().trim()));
-                   // json.put("connectPort", "home");
 
-                    CastX.wsClientConnectAdb(json.toString());
+
+
+                    webrtcPlayerActivity.ConnectAdb(json.toString());
                     System.out.println("btnPair json:"+json+"\r\n");
                 }catch (Exception e){
                     e.printStackTrace();
@@ -140,7 +141,7 @@ public class AdbConnectFragment extends Fragment {
                 json.put("address",  ipEt.getText());
                 json.put("connectPort", Long.parseLong(etConectPort.getText().toString().trim()));
 
-                CastX.wsClientConnectAdb(json.toString());
+                webrtcPlayerActivity.ConnectAdb(json.toString());
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -175,11 +176,15 @@ public class AdbConnectFragment extends Fragment {
         super.onPause();
 
     }
-    // 更新显示数值
 
-    private void updateStartUI(){
-
+    @Override
+    public  void onDestroy() {
+        super.onDestroy();
+        usbToWebSocket.closeAll();
     }
+
+
+
 
     View.OnClickListener tab=new View.OnClickListener(){
 
@@ -201,32 +206,37 @@ public class AdbConnectFragment extends Fragment {
         }
     };
 
-
+    private boolean hasInterfaceAdb(UsbDevice device) {
+        for (int i = 0; i < device.getInterfaceCount(); i++) {
+            if (device.getInterface(i).getInterfaceClass() == 0xFF&&
+                    device.getInterface(i).getInterfaceSubclass()==0x42&&
+                    device.getInterface(i).getInterfaceProtocol()==0x01
+                ) {
+                return true;
+            }
+        }
+        return false;
+    }
     public  void findAndClaimTargetDevice(Context context) {
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         if (usbManager == null) {
             return;
         }
-        System.out.println("findAndClaimTargetDevice\r\n");
         // 获取所有已连接的USB设备
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         List<UsbItemAdapter.UsbItem> items = new ArrayList<>();
         for (Map.Entry<String, UsbDevice> entry : deviceList.entrySet()) {
             UsbDevice device = entry.getValue();
-            items.add( new UsbItemAdapter.UsbItem(device.getDeviceName(),device));
-            System.out.println("findAndClaimTargetDevice1 device:\r\n"+device);
+            //如果是adb设备
+            if (hasInterfaceAdb(device)) {
+                items.add(new UsbItemAdapter.UsbItem(device.getDeviceName(), device));
+            }
         }
-        System.out.println("findAndClaimTargetDevice1"+items);
+
         // 设置适配器
         UsbItemAdapter adapter = new UsbItemAdapter(getActivity(), items,usbToWebSocket);
         ListView listView = view.findViewById(R.id.usbList);
         listView.setAdapter(adapter);
-        System.out.println("findAndClaimTargetDevice2\r\n");
-        // 设置列表项点击事件
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            UsbItemAdapter.UsbItem item = items.get(position);
-          //  Toast.makeText(this, "选择了: " + item, Toast.LENGTH_SHORT).show();
-        });
     }
 
 }

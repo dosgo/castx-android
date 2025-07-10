@@ -39,38 +39,70 @@ public class UsbToWebSocket {
     private final int packetSize = 512*32;
     private final BroadcastReceiver usbPermissionReceiver;
 
+    private UsbChangeCallback usbChangeCallback;
+    // USB 设备变动回调接口
+    public interface UsbChangeCallback {
+        void onUsbDevicesChanged();
+    }
+
+    /**
+     * 设置 USB 设备变动回调
+     */
+    public void setUsbChangeCallback( UsbChangeCallback callback) {
+        this.usbChangeCallback = callback;
+    }
+
     public UsbToWebSocket(Context context) {
         this.context = context;
         this.usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
 
         // 创建USB权限广播接收器
         this.usbPermissionReceiver = new BroadcastReceiver() {
-            @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 if (ACTION_USB_PERMISSION.equals(action)) {
                     synchronized (this) {
                         UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+
                         if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                            if (device != null) {
-                                Log.i(TAG, "USB权限已授权");
+                            if(device != null){
                                 connectUsb(device);
                             }
-                        } else {
-                            Log.d(TAG, "USB权限被拒绝: " + device);
+                        }
+                        else {
+                            Log.d(TAG, "permission denied for device " + device);
                             Toast.makeText(context, R.string.connectUsbErr, Toast.LENGTH_SHORT).show();
                         }
                     }
+                }
+                //设备插入
+                if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
+                    notifyUsbDevicesChanged();
+                }else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                    notifyUsbDevicesChanged();
                 }
             }
         };
 
         // 注册广播接收器
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        ContextCompat.registerReceiver(context, usbPermissionReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED); // 系统广播
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        // 使用 ContextCompat.registerReceiver 并指定标志位
+        ContextCompat.registerReceiver(
+                context,              // 上下文 (Activity, Service, Application)
+                usbPermissionReceiver,            // 你的接收器实例
+                filter,                // 意图过滤器
+                ContextCompat.RECEIVER_NOT_EXPORTED //
+        );
     }
 
-
+    private void notifyUsbDevicesChanged() {
+        if (usbChangeCallback != null) {
+            usbChangeCallback.onUsbDevicesChanged();
+        }
+    }
     public void requestUsbPermission(UsbDevice _usbDevice ) {
         this.usbDevice=_usbDevice;
         PendingIntent permissionIntent = PendingIntent.getBroadcast(

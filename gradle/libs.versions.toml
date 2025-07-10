@@ -12,6 +12,7 @@ appcompat = "1.7.0"
 browser = "1.8.0"
 material = "1.12.0"
 media3Ui = "1.7.1"
+firebaseDatabase = "21.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +33,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3Ui" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

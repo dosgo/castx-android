@@ -212,24 +212,5 @@ class Control   {
         }
     }
 
-    public static  void loginCall(String data){
-            if(play!=null){
-                play.loginCall(data);
-            }
-    }
-
-    public static  void offerRespCall(String data){
-        if(play!=null){
-            play.offerRespCall(data);
-        }
-    }
-
-    public static  void infoNotifyCall(String data){
-        if(play!=null){
-            play.infoNotifyCall(data);
-        }
-    }
-
-
 }
 

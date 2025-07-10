@@ -37,10 +37,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.*;
-import castX.CastX;
 
 public class WebrtcPlayerActivity extends AppCompatActivity {
 
@@ -82,7 +82,7 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
     private  int videoHeight = 0;
     private int videoWidth  =0;
     private RadioGroup tabTop;
-
+    private WsClient wsClient;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,7 +111,7 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject();
                 json.put("type", "keyboard");
                 json.put("code", "home");
-                CastX.wsClientSendControl(json.toString());
+                sendControl(json.toString());
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -121,12 +121,11 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject();
                 json.put("type", "keyboard");
                 json.put("code", "back");
-                CastX.wsClientSendControl(json.toString());
+                sendControl(json.toString());
             }catch (Exception e){
                 e.printStackTrace();
             }
         });
-
 
 
         volume= findViewById(R.id.volume);
@@ -154,7 +153,7 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject();
                 json.put("type", "displayPower");
                 json.put("action", displayPower ? 1 : 0);
-                CastX.wsClientSendControl(json.toString());
+                sendControl(json.toString());
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -176,7 +175,9 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                     if (!isRunning) {
                         new Thread(() -> play()).start();
                     } else {
-                        CastX.shutdownWsClient();
+                        if(wsClient!=null) {
+                            wsClient.disconnect();
+                        }
                         releaseWebRTCResources();
                         isRunning=false;
                         updateStartUI();
@@ -215,14 +216,7 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
             }
         });
         passwordve=findViewById(R.id.passwordve);
-
-
-
-
         Control.setActivity(this);
-
-
-
         tabTop=findViewById(R.id.tab_top);
         tabTop.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -241,13 +235,12 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
 
         findViewById(R.id.backMain).setOnClickListener(v -> {
             Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("selectTab",isScrcpy?2:1);
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
             startActivity(intent);
         });
 
         processIntent();
-
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -405,7 +398,9 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                         json.put("type", offer.type.canonicalForm());
                         json.put("sdp", offer.description);
 
-                        CastX.wsClientSendOffer(json.toString());
+                        if(wsClient!=null) {
+                            wsClient.sendOffer(json.toString());
+                        }
                     } catch (Exception e){
                         e.printStackTrace();
 
@@ -549,6 +544,8 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
         }
     }
 
+
+
     private void showAdbConnectFragment(boolean show){
         runOnUiThread(()-> {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -613,7 +610,37 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
             int maxSize = metrics.widthPixels > metrics.heightPixels ? metrics.widthPixels : metrics.heightPixels;
             System.out.println("play maxSize:" + maxSize);
             System.out.println("wsUrl:" + wsUrl+"uri.getScheme():"+uri.getScheme());
-            CastX.startWsClient(wsUrl, password, maxSize);
+
+            wsClient = new WsClient(wsUrl, password, maxSize);
+            wsClient.setCallback(new WsClient.WsCallback() {
+                @Override
+                public void onLogin(JSONObject data) {
+                   loginCall(data.toString());
+                }
+
+                @Override
+                public void onOfferResponse(JSONObject data) {
+
+                    offerRespCall(data.toString());
+
+                }
+
+                @Override
+                public void onInfoNotify(JSONObject data) {
+                    infoNotifyCall(data.toString());
+                }
+
+                @Override
+                public void onStatusUpdate(String message) {
+
+                }
+
+                @Override
+                public void onError(String error) {
+
+                }
+            });
+            wsClient.connect();
             isRunning = true;
         }catch (URISyntaxException e){
             runOnUiThread(() -> {
@@ -778,7 +805,7 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                     System.out.println("srcvideoWidth:"+videoWidth);
                     System.out.println("width:"+width);
                     System.out.println("downX:"+downX);
-                    CastX.wsClientSendControl(json.toString());
+                    sendControl(json.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -786,6 +813,19 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
             return true;
         }
     };
+
+    private void  sendControl( String args) {
+        if (wsClient != null) {
+            wsClient.sendCmd("control",args);
+        }
+    }
+
+    public void  ConnectAdb( String args) {
+        if (wsClient != null) {
+            wsClient.sendCmd("connectAdb",args);
+        }
+    }
+
 
     private void releaseWebRTCResources() {
         if (peerConnection != null) {

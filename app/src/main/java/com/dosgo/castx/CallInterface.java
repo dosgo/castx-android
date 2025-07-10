@@ -15,20 +15,8 @@ public class CallInterface implements JavaCallbackInterface {
         return ;
     }
 
-    @Override
-    public void loginCall(String s) {
-        Control.loginCall(s);
-    }
 
-    @Override
-    public void offerRespCall(String s) {
-        Control.offerRespCall(s);
-    }
 
-    @Override
-    public void infoNotifyCall(String s) {
-        Control.infoNotifyCall(s);
-    }
 
 
 
