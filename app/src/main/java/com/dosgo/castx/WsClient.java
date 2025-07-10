@@ -101,8 +101,8 @@ public class WsClient {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             try {
                 JSONObject message = new JSONObject();
-                message.put("Type", "offer");
-                message.put("Data", offerJSON);
+                message.put("type", "offer");
+                message.put("data", offerJSON);
                 webSocketClient.send(message.toString());
 
             } catch (JSONException e) {
@@ -117,8 +117,8 @@ public class WsClient {
         if (webSocketClient != null && webSocketClient.isOpen()) {
             try {
                 JSONObject message = new JSONObject();
-                message.put("Type", cmd);
-                message.put("Data", args);
+                message.put("type", cmd);
+                message.put("data", args);
                 webSocketClient.send(message.toString());
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -173,8 +173,8 @@ public class WsClient {
 
             JSONObject jsonArgs = new JSONObject(args);
             JSONObject message = new JSONObject();
-            message.put("Type", "loginAuth");
-            message.put("Data", jsonArgs.toString());
+            message.put("type", "loginAuth");
+            message.put("data", jsonArgs.toString());
 
             webSocketClient.send(message.toString());
 
