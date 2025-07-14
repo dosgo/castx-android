@@ -324,8 +324,8 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(
                 new ArrayList<>() // 不需要ICE服务器
         );
-        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
-        configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+       // configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+      //  configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
         configuration.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
         configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
