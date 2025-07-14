@@ -306,16 +306,17 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                 PeerConnectionFactory.InitializationOptions.builder(this)
                         .setEnableInternalTracer(true)
                         .setFieldTrials("WebRTC-Bwe-AlrLimitedBackoff/Enabled/") // 自适应带宽算法
+                        .setFieldTrials("WebRTC-ZeroPlayoutDelay/Enabled/") // 关键：减少缓冲延迟
+                        .setFieldTrials("WebRTC-LowLatencyRenderer/Enabled/")
                         .createInitializationOptions();
-
-
-
         PeerConnectionFactory.initialize(options);
+
 
         DefaultVideoDecoderFactory decoderFactory = new DefaultVideoDecoderFactory(eglBase.getEglBaseContext());
 
         PeerConnectionFactory.Options options1 = new PeerConnectionFactory.Options();
         options1.disableNetworkMonitor = true;
+
 
         factory = PeerConnectionFactory.builder().setOptions(options1).setVideoDecoderFactory(decoderFactory).createPeerConnectionFactory();
 
@@ -329,8 +330,6 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
         configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
 
-
-
         peerConnection = factory.createPeerConnection(configuration, new PeerConnection.Observer() {
             @Override
             public void onAddStream(MediaStream stream) {
@@ -341,8 +340,16 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                         videoTrack = stream.videoTracks.get(0);
                         videoTrack.addSink(videoRenderer);
                         videoTrack.addSink(fullRenderer);
-                        //videoRenderer.setRotation(180f);
-                        Log.d("WebRTCPlayer", "开始播放视频");
+
+
+                        // 使用异步渲染（API 23+）
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            videoRenderer.setEnableHardwareScaler(true); // 异步缩放
+                            fullRenderer.setEnableHardwareScaler(true); // 异步缩放
+                            videoRenderer.setZOrderMediaOverlay(true); // 提升渲染优先级
+                            fullRenderer.setZOrderMediaOverlay(true); // 提升渲染优先级
+                        }
+
                     }
 
                     // 播放音频
@@ -422,6 +429,7 @@ public class WebrtcPlayerActivity extends AppCompatActivity {
                 PeerConnection.Observer.super.onTrack(transceiver);
             }
         });
+
 
         RtpTransceiver videoTransceiver = peerConnection.addTransceiver(
                 MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO
