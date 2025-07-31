@@ -63,12 +63,18 @@ public class ScrcpyClientFragment extends Fragment {
             openView();
         });
         view.findViewById(R.id.btn_open_browser).setOnClickListener(v -> {
+            test.test(getContext());
             if (! Status.scrcpyIsRunning) {
                 Toast.makeText(context, R.string.scrcpyNotStarted, Toast.LENGTH_SHORT).show();
                 return;
             }
             openEdgeCustomTab();
         });
+
+        view.findViewById(R.id.test).setOnClickListener(v -> {
+            test.test(getContext());
+        });
+
 
 
 
