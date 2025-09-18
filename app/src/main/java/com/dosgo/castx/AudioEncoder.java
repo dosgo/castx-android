@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioPlaybackCaptureConfiguration;
 import android.media.AudioRecord;
 import android.media.MediaCodec;
@@ -62,9 +63,13 @@ public class AudioEncoder {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void initAudioCapture() {
 
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        String sampleRateStr = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+        int recommendedSampleRate = Integer.parseInt(sampleRateStr); //
+        System.out.println("recommendedSampleRate:"+recommendedSampleRate);
         AudioFormat format = new AudioFormat.Builder()
                 .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                .setSampleRate(48000)
+                .setSampleRate(recommendedSampleRate)
                 .setChannelMask(AudioFormat.CHANNEL_IN_STEREO)
                 .build();
 
@@ -84,8 +89,10 @@ public class AudioEncoder {
     }
 
     private void initCodec() throws IOException {
-
-        MediaFormat format = MediaFormat.createAudioFormat(MIME_TYPE, 48000, 2);
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        String sampleRateStr = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+        int recommendedSampleRate = Integer.parseInt(sampleRateStr); //
+        MediaFormat format = MediaFormat.createAudioFormat(MIME_TYPE, recommendedSampleRate, 2);
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate);
         format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 4096);
 
